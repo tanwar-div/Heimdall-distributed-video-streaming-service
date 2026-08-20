@@ -1,0 +1,21 @@
+# Activated via SPRING_PROFILES_ACTIVE=docker (set in docker-compose.yml).
+# Points the same primary/replica ids at their compose service hostnames
+# instead of localhost:<port>, since each node is its own container
+# listening on 8081 internally.
+heimdall:
+  cluster:
+    primaries:
+      - id: primary-0
+        base-url: http://primary-0:8081
+        replicas:
+          - id: primary-0-replica-0
+            base-url: http://primary-0-replica-0:8081
+          - id: primary-0-replica-1
+            base-url: http://primary-0-replica-1:8081
+      - id: primary-1
+        base-url: http://primary-1:8081
+        replicas:
+          - id: primary-1-replica-0
+            base-url: http://primary-1-replica-0:8081
+          - id: primary-1-replica-1
+            base-url: http://primary-1-replica-1:8081

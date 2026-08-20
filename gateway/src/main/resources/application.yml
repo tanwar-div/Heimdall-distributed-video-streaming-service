@@ -1,0 +1,57 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: heimdall-gateway
+  servlet:
+    multipart:
+      max-file-size: 5GB
+      max-request-size: 5GB
+      file-size-threshold: 1MB
+
+heimdall:
+  api-key: ${HEIMDALL_API_KEY:changeme}
+  default-read-percent: ${DEFAULT_READ_PERCENT:50}
+  max-fetch-attempts: ${MAX_FETCH_ATTEMPTS:4}
+  fetch-pool-size: ${FETCH_POOL_SIZE:16}
+  node-request-timeout-ms: ${NODE_REQUEST_TIMEOUT_MS:15000}
+  cluster:
+    virtual-nodes: ${VIRTUAL_NODES:100}
+    # Default topology for running everything locally, one JVM per node, via
+    # `mvn spring-boot:run` with SERVER_PORT/NODE_ID/NODE_ROLE overridden per
+    # instance (see the README). The docker-compose deployment instead
+    # activates the "docker" profile (application-docker.yml), which points
+    # these same primary/replica ids at their compose service hostnames.
+    primaries:
+      - id: primary-0
+        base-url: http://localhost:8081
+        replicas:
+          - id: primary-0-replica-0
+            base-url: http://localhost:8082
+          - id: primary-0-replica-1
+            base-url: http://localhost:8083
+      - id: primary-1
+        base-url: http://localhost:8084
+        replicas:
+          - id: primary-1-replica-0
+            base-url: http://localhost:8085
+          - id: primary-1-replica-1
+            base-url: http://localhost:8086
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    com.example.heimdall: INFO

@@ -1,0 +1,39 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: heimdall-storage-node
+
+heimdall:
+  node:
+    # id/role/replicas default to a standalone primary here so the app is
+    # runnable out of the box; docker-compose instead activates one of the
+    # per-node profiles below (application-<node-id>.yml) via
+    # SPRING_PROFILES_ACTIVE, which overrides id/role/replicas for that
+    # specific container.
+    id: ${NODE_ID:primary-0}
+    role: ${NODE_ROLE:PRIMARY}
+    chunk-size-bytes: ${CHUNK_SIZE_BYTES:1048576}
+    max-object-size-bytes: ${MAX_OBJECT_SIZE_BYTES:5368709120}
+    synchronous-replication: ${SYNCHRONOUS_REPLICATION:false}
+    replication-timeout-ms: ${REPLICATION_TIMEOUT_MS:30000}
+    replication-max-retries: ${REPLICATION_MAX_RETRIES:2}
+    replicas: []
+  minio:
+    endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+    access-key: ${MINIO_ACCESS_KEY:heimdall}
+    secret-key: ${MINIO_SECRET_KEY:heimdall-secret}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  level:
+    com.example.heimdall: INFO

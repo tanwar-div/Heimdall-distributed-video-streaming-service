@@ -1,0 +1,4 @@
+heimdall:
+  node:
+    id: primary-1-replica-1
+    role: REPLICA

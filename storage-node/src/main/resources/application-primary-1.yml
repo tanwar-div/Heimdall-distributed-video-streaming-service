@@ -1,0 +1,9 @@
+heimdall:
+  node:
+    id: primary-1
+    role: PRIMARY
+    replicas:
+      - id: primary-1-replica-0
+        base-url: http://primary-1-replica-0:8081
+      - id: primary-1-replica-1
+        base-url: http://primary-1-replica-1:8081
