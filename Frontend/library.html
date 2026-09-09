@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Heimdall Dashboard - Library</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <nav class="topnav">
+    <div class="brand">🛡️ Heimdall</div>
+    <div class="links">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="upload.html">Upload</a>
+      <a href="library.html" class="active">Library</a>
+    </div>
+    <button id="logoutBtn" class="ghost">Log out</button>
+  </nav>
+
+  <main class="page">
+    <div style="display:flex; align-items:baseline; justify-content:space-between;">
+      <div>
+        <h1>Library</h1>
+        <p class="subtitle">Every object known across the cluster (best-effort union across all primaries).</p>
+      </div>
+      <button id="refreshBtn">Refresh</button>
+    </div>
+
+    <div id="libraryError" class="message error hidden"></div>
+
+    <div class="card" style="margin-bottom:20px;">
+      <table>
+        <thead>
+          <tr><th>Object ID</th><th style="text-align:right;">Actions</th></tr>
+        </thead>
+        <tbody id="objectRows"></tbody>
+      </table>
+      <div id="emptyState" class="empty-state hidden">No objects uploaded yet.</div>
+    </div>
+
+    <div id="playerCard" class="card hidden" style="margin-bottom:20px;">
+      <h2 id="playerTitle">Now playing</h2>
+      <video id="player" controls></video>
+    </div>
+
+    <div id="infoCard" class="card hidden">
+      <h2 id="infoTitle">Routing decision</h2>
+      <div id="infoBody" class="code-block"></div>
+    </div>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/library.js"></script>
+</body>
+</html>

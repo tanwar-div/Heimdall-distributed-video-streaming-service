@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Heimdall Dashboard - Log In</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="login-shell">
+    <div class="card login-card">
+      <div class="brand">🛡️ Heimdall</div>
+      <div class="tagline">Load-balancer &amp; streaming dashboard</div>
+
+      <div id="loginError" class="message error hidden"></div>
+
+      <form id="loginForm">
+        <div class="field">
+          <label for="username">Username</label>
+          <input type="text" id="username" autocomplete="username" required />
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" autocomplete="current-password" required />
+        </div>
+        <button type="submit" class="primary" style="width:100%;">Log in</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script>
+    document.getElementById("loginForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+      const errorBox = document.getElementById("loginError");
+
+      const ok = username === HEIMDALL_CONFIG.LOGIN_USERNAME && password === HEIMDALL_CONFIG.LOGIN_PASSWORD;
+      if (ok) {
+        sessionStorage.setItem("heimdall_auth", "ok");
+        window.location.href = "dashboard.html";
+      } else {
+        errorBox.textContent = "Invalid username or password.";
+        errorBox.classList.remove("hidden");
+      }
+    });
+
+    // Already logged in? Skip straight to the dashboard.
+    if (sessionStorage.getItem("heimdall_auth") === "ok") {
+      window.location.href = "dashboard.html";
+    }
+  </script>
+</body>
+</html>

@@ -1,19 +1,28 @@
 package com.example.heimdall.gateway.service;
 
 import com.example.heimdall.common.dto.ObjectMetadataDto;
+import com.example.heimdall.common.stream.ChunkPlan;
 import com.example.heimdall.gateway.config.GatewayProperties;
 import com.example.heimdall.gateway.model.PrimaryNode;
 import com.example.heimdall.gateway.model.ReplicaNode;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import static com.example.heimdall.gateway.service.MetricsService.CHUNK_FETCH_LATENCY;
+import static com.example.heimdall.gateway.service.MetricsService.FAILOVERS;
+import static com.example.heimdall.gateway.service.MetricsService.READS;
+import static com.example.heimdall.gateway.service.MetricsService.TAG_PRIMARY;
 
 /**
  * The read path. Resolves the owning primary, picks a percentage of its
@@ -29,13 +38,16 @@ public class StreamingOrchestratorService {
     private final NodeClient nodeClient;
     private final GatewayProperties properties;
     private final ExecutorService streamingExecutor;
+    private final MeterRegistry meterRegistry;
 
     public StreamingOrchestratorService(LoadBalancerService loadBalancerService, NodeClient nodeClient,
-                                         GatewayProperties properties, ExecutorService streamingExecutor) {
+                                         GatewayProperties properties, ExecutorService streamingExecutor,
+                                         MeterRegistry meterRegistry) {
         this.loadBalancerService = loadBalancerService;
         this.nodeClient = nodeClient;
         this.properties = properties;
         this.streamingExecutor = streamingExecutor;
+        this.meterRegistry = meterRegistry;
     }
 
     /** A resolved read plan: which nodes to try, in what order, and the object's metadata. */
@@ -47,22 +59,29 @@ public class StreamingOrchestratorService {
         List<ReplicaNode> selected = loadBalancerService.selectReadReplicas(primary, readPercent);
         List<String> candidates = buildCandidateOrder(primary, selected);
         ObjectMetadataDto meta = fetchMetaWithFailover(candidates, objectId);
+        meterRegistry.counter(READS, TAG_PRIMARY, primary.id()).increment();
         return new PreparedStream(objectId, meta, candidates, selected.size());
     }
 
-    /** Selected replicas first (in their randomly-shuffled order), then this primary's other replicas, then the primary itself as a last resort. */
-    private List<String> buildCandidateOrder(PrimaryNode primary, List<ReplicaNode> selected) {
-        List<String> order = new ArrayList<>();
+    /**
+     * Selected replicas first (in their randomly-shuffled order), then this
+     * primary's other replicas, then the primary itself as a last resort.
+     *
+     * <p>A {@link LinkedHashSet} rather than a list-with-contains-check: this
+     * runs once per read, and the list form was quadratic in replica count.
+     * That is invisible at two replicas and is not at fifty.
+     */
+    public static List<String> buildCandidateOrder(PrimaryNode primary, List<ReplicaNode> selected) {
+        LinkedHashSet<String> order = new LinkedHashSet<>(
+                (selected.size() + primary.replicas().size() + 1) * 2);
         for (ReplicaNode r : selected) {
             order.add(r.baseUrl());
         }
         for (ReplicaNode r : primary.replicas()) {
-            if (!order.contains(r.baseUrl())) {
-                order.add(r.baseUrl());
-            }
+            order.add(r.baseUrl());
         }
         order.add(primary.baseUrl());
-        return order;
+        return List.copyOf(order);
     }
 
     private ObjectMetadataDto fetchMetaWithFailover(List<String> candidates, String objectId) {
@@ -82,13 +101,12 @@ public class StreamingOrchestratorService {
         if (end < start) {
             return;
         }
-        int chunkSize = prepared.meta().chunkSize();
-        int firstChunk = (int) (start / chunkSize);
-        int lastChunk = (int) (end / chunkSize);
+        ChunkPlan plan = ChunkPlan.forRange(start, end, prepared.meta().chunkSize());
+        int firstChunk = plan.firstChunk();
         int selectedCount = prepared.selectedReplicaCount();
 
-        List<CompletableFuture<byte[]>> futures = new ArrayList<>(lastChunk - firstChunk + 1);
-        for (int chunkIndex = firstChunk; chunkIndex <= lastChunk; chunkIndex++) {
+        List<CompletableFuture<byte[]>> futures = new ArrayList<>(plan.chunkCount());
+        for (int chunkIndex = firstChunk; chunkIndex <= plan.lastChunk(); chunkIndex++) {
             int startCandidate = selectedCount > 0 ? (chunkIndex % selectedCount) : 0;
             int idx = chunkIndex;
             futures.add(CompletableFuture.supplyAsync(
@@ -100,9 +118,8 @@ public class StreamingOrchestratorService {
             for (int i = 0; i < futures.size(); i++) {
                 int chunkIndex = firstChunk + i;
                 byte[] chunk = futures.get(i).join();
-                long chunkStartOffset = (long) chunkIndex * chunkSize;
-                int from = (int) Math.max(0, start - chunkStartOffset);
-                int to = (int) Math.min(chunk.length, end - chunkStartOffset + 1);
+                int from = plan.offsetWithin(chunkIndex);
+                int to = plan.endWithin(chunkIndex, chunk.length);
                 if (from < to) {
                     out.write(chunk, from, to - from);
                 }
@@ -123,8 +140,14 @@ public class StreamingOrchestratorService {
         RuntimeException last = null;
         for (int a = 0; a < attempts; a++) {
             String baseUrl = candidates.get((startCandidateIndex + a) % candidates.size());
+            long startNanos = System.nanoTime();
             try {
-                return nodeClient.fetchChunk(baseUrl, objectId, chunkIndex);
+                byte[] chunk = nodeClient.fetchChunk(baseUrl, objectId, chunkIndex);
+                meterRegistry.timer(CHUNK_FETCH_LATENCY).record(System.nanoTime() - startNanos, TimeUnit.NANOSECONDS);
+                if (a > 0) {
+                    meterRegistry.counter(FAILOVERS).increment();
+                }
+                return chunk;
             } catch (NoSuchElementException | NodeUnavailableException e) {
                 last = e;
             }

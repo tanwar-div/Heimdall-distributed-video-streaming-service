@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Heimdall Dashboard - Upload</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <nav class="topnav">
+    <div class="brand">🛡️ Heimdall</div>
+    <div class="links">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="upload.html" class="active">Upload</a>
+      <a href="library.html">Library</a>
+    </div>
+    <button id="logoutBtn" class="ghost">Log out</button>
+  </nav>
+
+  <main class="page" style="max-width:560px;">
+    <h1>Upload a video</h1>
+    <p class="subtitle">Routed to its owning primary by consistent hashing, then replicated asynchronously.</p>
+
+    <div class="card">
+      <form id="uploadForm">
+        <div class="field">
+          <label for="objectId">Object ID (optional - defaults to the filename)</label>
+          <input type="text" id="objectId" placeholder="e.g. beach-sunset" />
+        </div>
+        <div class="field">
+          <label for="fileInput">Video file</label>
+          <input type="file" id="fileInput" accept="video/*" required />
+        </div>
+        <button type="submit" id="uploadBtn" class="primary" style="width:100%;">Upload</button>
+      </form>
+    </div>
+
+    <div id="uploadMessage" class="message hidden" style="margin-top:16px;"></div>
+    <div id="uploadResult" class="card hidden" style="margin-top:16px;">
+      <h2>Stored</h2>
+      <div id="uploadResultBody" class="code-block"></div>
+    </div>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/upload.js"></script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 package com.example.heimdall.gateway.service;
 
-import com.example.heimdall.common.ring.ConsistentHashRing;
+import com.example.heimdall.common.ring.KeyRouter;
 import com.example.heimdall.gateway.config.GatewayProperties;
 import com.example.heimdall.gateway.model.PrimaryNode;
 import com.example.heimdall.gateway.model.ReplicaNode;
@@ -18,18 +18,18 @@ import java.util.Random;
 @Service
 public class LoadBalancerService {
 
-    private final ConsistentHashRing<PrimaryNode> ring;
+    private final KeyRouter<PrimaryNode> router;
     private final GatewayProperties properties;
     private final Random random = new Random();
 
-    public LoadBalancerService(ConsistentHashRing<PrimaryNode> ring, GatewayProperties properties) {
-        this.ring = ring;
+    public LoadBalancerService(KeyRouter<PrimaryNode> router, GatewayProperties properties) {
+        this.router = router;
         this.properties = properties;
     }
 
-    /** Which primary in the ring owns this object. */
+    /** Which primary owns this object, according to the configured routing algorithm. */
     public PrimaryNode resolvePrimary(String objectId) {
-        return ring.getMemberFor(objectId);
+        return router.route(objectId);
     }
 
     /** A customized percentage of the owning primary's read replicas, randomly chosen and shuffled. */

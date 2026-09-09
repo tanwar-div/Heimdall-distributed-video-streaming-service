@@ -132,6 +132,17 @@ curl http://localhost:8080/objects/my-video -H "Range: bytes=0-1048575" --output
 Swagger UI: http://localhost:8080/swagger-ui.html
 MinIO console: http://localhost:9001 (user/pass default to `heimdall` / `heimdall-secret`)
 
+### Dashboard (optional)
+
+A plain HTML/JS dashboard lives in `Frontend/` — upload/play videos, inspect
+routing decisions, and watch live traffic metrics and cluster health without
+touching `curl`. See `Frontend/README.md`; short version:
+
+```bash
+cd Frontend && python3 -m http.server 5500
+# open http://localhost:5500/login.html (admin / heimdall123 by default)
+```
+
 ### Locally, without Docker
 
 Every node is the same jar; only `--spring.profiles.active` differs. This was
@@ -143,14 +154,14 @@ mvn -DskipTests package
 # a standalone MinIO binary works fine, or run it via `docker run minio/minio`
 MINIO_ROOT_USER=heimdall MINIO_ROOT_PASSWORD=heimdall-secret ./minio server ./data --console-address ":9001" &
 
-java -jar storage-node/target/heimdall-storage-node.jar --spring.profiles.active=primary-0 --server.port=8081 &
-java -jar storage-node/target/heimdall-storage-node.jar --spring.profiles.active=primary-0-replica-0 --server.port=8082 &
-java -jar storage-node/target/heimdall-storage-node.jar --spring.profiles.active=primary-0-replica-1 --server.port=8083 &
-java -jar storage-node/target/heimdall-storage-node.jar --spring.profiles.active=primary-1 --server.port=8084 &
-java -jar storage-node/target/heimdall-storage-node.jar --spring.profiles.active=primary-1-replica-0 --server.port=8085 &
-java -jar storage-node/target/heimdall-storage-node.jar --spring.profiles.active=primary-1-replica-1 --server.port=8086 &
+java -jar storage-node/target/heimdall-storage-node-boot.jar --spring.profiles.active=primary-0 --server.port=8081 &
+java -jar storage-node/target/heimdall-storage-node-boot.jar --spring.profiles.active=primary-0-replica-0 --server.port=8082 &
+java -jar storage-node/target/heimdall-storage-node-boot.jar --spring.profiles.active=primary-0-replica-1 --server.port=8083 &
+java -jar storage-node/target/heimdall-storage-node-boot.jar --spring.profiles.active=primary-1 --server.port=8084 &
+java -jar storage-node/target/heimdall-storage-node-boot.jar --spring.profiles.active=primary-1-replica-0 --server.port=8085 &
+java -jar storage-node/target/heimdall-storage-node-boot.jar --spring.profiles.active=primary-1-replica-1 --server.port=8086 &
 
-java -jar gateway/target/heimdall-gateway.jar --heimdall.api-key=changeme
+java -jar gateway/target/heimdall-gateway-boot.jar --heimdall.api-key=changeme
 ```
 
 The default `application.yml` in each module already points at these exact
@@ -168,6 +179,8 @@ All endpoints are on the gateway (`:8080`).
 | `GET` | `/objects` | - | Best-effort list of every object id across the cluster. |
 | `GET` | `/objects/{id}/replicas?readPercent=NN` | - | Debug: which primary owns this key, and which replicas a read would use. |
 | `GET` | `/cluster` | - | The full topology the gateway was configured with. |
+| `GET` | `/cluster/health` | - | Live UP/DOWN status of every primary and replica (used by the dashboard). |
+| `GET` | `/metrics/summary` | - | Aggregated upload/download/failover counters and average chunk-fetch latency. |
 
 Upload validation: rejects content types not on the node's allow-list (415)
 and objects over the configured max size (413) - see `heimdall.node.*` in
@@ -179,7 +192,9 @@ Key `heimdall.*` properties (env-overridable, see each module's
 `application.yml`):
 
 - **gateway**: `api-key`, `default-read-percent`, `max-fetch-attempts`,
-  `fetch-pool-size`, `cluster.virtual-nodes`, `cluster.primaries[]`
+  `fetch-pool-size`, `cluster.router` (`RENDEZVOUS`/`RING`/`KETAMA`),
+  `cluster.hash-function`, `cluster.virtual-nodes` (`RING` only),
+  `cluster.primaries[]`
 - **storage-node**: `node.id`, `node.role` (`PRIMARY`/`REPLICA`),
   `node.chunk-size-bytes` (default 1 MiB), `node.max-object-size-bytes`
   (default 5 GiB), `node.synchronous-replication`, `node.allowed-content-types`,
@@ -188,22 +203,92 @@ Key `heimdall.*` properties (env-overridable, see each module's
 ## Testing
 
 ```bash
-mvn test
+mvn test                      # unit + property-based tests, no infrastructure
+mvn verify -pl integration-tests   # the real cluster, needs Docker
 ```
 
-Covers the consistent-hash ring's routing/distribution properties, the load
-balancer's percent-based replica selection, the streaming orchestrator's
-chunk/byte-range math and failover behavior (mocked node calls), and the
-storage node's chunking/validation logic (mocked MinIO client).
+Two layers, testing different things.
+
+**Property-based tests** (jqwik) prove the algorithms rather than sampling
+them. Instead of asserting that a few hand-picked byte ranges come back
+correctly, `ChunkPlanTest` checks *every* range of every small object
+exhaustively, and thousands of generated ranges over larger ones, against a
+trivially-correct reference. `KeyRouterPropertiesTest` checks the guarantees
+that make consistent hashing worth using - that losing a node moves only that
+node's keys, and that adding then removing one restores the exact original
+mapping - across every routing algorithm at once. `StreamingFailoverPropertiesTest`
+generates node-failure combinations (unreachable, reachable-but-not-replicated-yet,
+healthy) and asserts a read succeeds whenever any node still holds the data, and
+that the bytes are exactly right when it does. `Murmur3Test` verifies the
+hand-written hash against Guava's reference implementation, because every
+benchmark number downstream depends on it genuinely being murmur3.
+
+**Integration tests** (`integration-tests/`) run the real thing: a real MinIO
+container, each storage node as a separate Spring Boot application on its own
+port, and the gateway calling them over real HTTP. Nothing is mocked - "a node
+is down" means the process is actually gone. They cover the full lifecycle
+(upload, replication, ranged and full reads, failover through every replica to
+the primary, delete), auth, validation status codes, routing spread across
+primaries, and a 24 MiB object streamed across 384 chunks. They skip
+automatically when no Docker daemon is reachable.
 
 ## Project layout
 
 ```
-common/         ConsistentHashRing + the DTOs exchanged over HTTP
-storage-node/   one node's storage engine (chunking, MinIO, replication)
-gateway/        the public API: ring, load balancer, streaming, auth
+common/             routing algorithms + hashes, byte-range planning, wire DTOs
+storage-node/       one node's storage engine (chunking, MinIO, replication)
+gateway/            the public API: routing, load balancing, streaming, auth, metrics
+benchmarks/         JMH suites + the routing quality analysis and the end-to-end load driver
+integration-tests/  the real cluster against real MinIO, over real HTTP
+Frontend/           plain HTML/JS dashboard - upload, playback, routing/health visibility
+bench/              scripts and compose config for the benchmark runs
 docker-compose.yml
+docker-compose.bench.yml
 ```
+
+## Benchmarks
+
+Full results and methodology in [BENCHMARKS.md](BENCHMARKS.md).
+
+```bash
+./bench/run-algorithms.sh full   # algorithms only, no infrastructure
+./bench/run-e2e.sh 64 15         # vs MinIO, nginx and SeaweedFS
+```
+
+The headline finding changed the code. Heimdall routed keys with a
+consistent-hash ring hashed by CRC-32, which passes every correctness test and
+is measurably the worst of the nine routing configurations benchmarked: on the
+deployed two-primary topology it gave one primary **63.7% of all objects**.
+Raising the virtual-node count - the standard remedy - does not fix it, because
+CRC-32 is a checksum whose outputs cluster for the structurally-similar inputs a
+ring feeds it; at 32 primaries, 500 virtual nodes is *worse* than 100 while
+costing five times the memory.
+
+The default is now rendezvous (highest-random-weight) hashing, which holds every
+primary within 2.2% of an even share at every cluster size, moves the
+theoretically minimal number of keys when a node joins or leaves, and does it
+with 96 bytes of routing state instead of 10.9 KiB.
+
+It is also **faster** at this cluster's size - 20 ns per lookup against the
+CRC-32 ring's 39 ns at two primaries - which is the opposite of what its O(N)
+scan predicts. A ring lookup is a pointer chase down a red-black tree of boxed
+`Long`s and misses cache on the way; a rendezvous scan over eight members is a
+contiguous array that fits in L1. The crossover where the ring wins is around 32
+primaries, which is why the algorithm is `heimdall.cluster.router` configuration
+rather than a hard-coded choice. The ring and libketama remain selectable,
+CRC-32 included, so the comparison stays reproducible rather than becoming a
+claim about the past.
+
+Worth stating plainly: the gateway's entire per-read routing CPU cost is about
+**84 ns**, against ~100,000 ns for one network round-trip to a storage node. The
+ring was never slow enough to matter - it was unbalanced enough to matter, and
+those are different problems with different fixes.
+
+Google's jump consistent hash scores as well as rendezvous on distribution and
+is faster still, but is disqualified by its contract rather than its
+performance: it addresses bucket indices, so when `primary-0` fails out of
+eight, **98.2%** of the keyspace remaps instead of the necessary 12.5%. That is
+asserted as a test rather than quietly avoided.
 
 ## Possible next steps
 

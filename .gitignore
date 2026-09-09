@@ -5,3 +5,8 @@ target/
 *.iml
 .vscode/
 .DS_Store
+bench-data/
+bench-results/
+.jqwik-database
+claudesession.txt
+dependency-reduced-pom.xml

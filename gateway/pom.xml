@@ -50,6 +50,11 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>net.jqwik</groupId>
+            <artifactId>jqwik</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -60,6 +65,15 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <mainClass>${start-class}</mainClass>
+                    <!--
+                        Attach the executable jar under a classifier so the
+                        module's main artifact stays an ordinary library jar.
+                        Without this, repackage() replaces the main artifact
+                        with a fat jar whose classes live under BOOT-INF/, and
+                        heimdall-benchmarks could not compile against this
+                        module's services.
+                    -->
+                    <classifier>boot</classifier>
                 </configuration>
                 <executions>
                     <execution>
