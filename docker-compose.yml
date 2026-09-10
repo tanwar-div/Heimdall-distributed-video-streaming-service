@@ -73,7 +73,10 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       HEIMDALL_API_KEY: ${HEIMDALL_API_KEY:-changeme}
     ports:
-      - "8080:8080"
+      # Host port is overridable because 8080 is a popular port to already have
+      # something on (a system Tomcat, another dev stack). The container port
+      # stays 8080; set GATEWAY_PORT to move only the published side.
+      - "${GATEWAY_PORT:-8080}:8080"
     depends_on:
       - primary-0
       - primary-0-replica-0

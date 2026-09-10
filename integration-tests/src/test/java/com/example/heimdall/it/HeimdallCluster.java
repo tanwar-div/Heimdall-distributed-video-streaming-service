@@ -25,6 +25,17 @@ import java.util.Map;
  *
  * <p>Ports are assigned by the OS ({@code server.port=0}) and read back after
  * startup, so the suite never collides with whatever else is running.
+ *
+ * <p>Configuration is passed as command-line arguments, not via
+ * {@code SpringApplicationBuilder.properties()}. Two details force this.
+ * Running the gateway and the storage nodes in one JVM puts two files named
+ * {@code application.yml} on the same classpath and Spring loads exactly one of
+ * them, so neither app's own defaults can be relied on. And
+ * {@code properties()} registers its values as <em>default</em> properties,
+ * which sit at the very bottom of Spring's precedence order - below
+ * {@code application.yml}, so {@code server.port=0} loses to the gateway's
+ * hard-coded 8080 and every node tries to bind the same port. Command-line
+ * arguments sit near the top of that order and win against both.
  */
 public final class HeimdallCluster implements AutoCloseable {
 
@@ -93,18 +104,18 @@ public final class HeimdallCluster implements AutoCloseable {
         properties.put("heimdall.node.id", nodeId);
         properties.put("heimdall.node.role", role);
         properties.put("heimdall.node.chunk-size-bytes", 64 * 1024);
+        properties.put("heimdall.node.max-object-size-bytes", 5L * 1024 * 1024 * 1024);
         properties.put("heimdall.node.synchronous-replication", synchronousReplication);
-        properties.put("minio.endpoint", minioEndpoint);
-        properties.put("minio.access-key", minioAccessKey);
-        properties.put("minio.secret-key", minioSecretKey);
+        properties.put("heimdall.minio.endpoint", minioEndpoint);
+        properties.put("heimdall.minio.access-key", minioAccessKey);
+        properties.put("heimdall.minio.secret-key", minioSecretKey);
         for (int i = 0; i < replicaUrls.size(); i++) {
             properties.put("heimdall.node.replicas[" + i + "].id", nodeId + "-replica-" + i);
             properties.put("heimdall.node.replicas[" + i + "].base-url", replicaUrls.get(i));
         }
 
-        ConfigurableApplicationContext context = new SpringApplicationBuilder(NodeApplication.class)
-                .properties(properties)
-                .run();
+        ConfigurableApplicationContext context =
+                new SpringApplicationBuilder(NodeApplication.class).run(asArguments(properties));
         return new NodeHandle(nodeId, "http://localhost:" + port(context), context);
     }
 
@@ -130,8 +141,14 @@ public final class HeimdallCluster implements AutoCloseable {
             p++;
         }
 
-        gatewayContext = new SpringApplicationBuilder(GatewayApplication.class).properties(properties).run();
+        gatewayContext = new SpringApplicationBuilder(GatewayApplication.class).run(asArguments(properties));
         gatewayUrl = "http://localhost:" + port(gatewayContext);
+    }
+
+    private static String[] asArguments(Map<String, Object> properties) {
+        return properties.entrySet().stream()
+                .map(entry -> "--" + entry.getKey() + "=" + entry.getValue())
+                .toArray(String[]::new);
     }
 
     private static int port(ConfigurableApplicationContext context) {

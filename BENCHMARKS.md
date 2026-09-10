@@ -258,8 +258,18 @@ optimises for - it happens to also sit exactly at the CPU sweet spot.
 
 ## 3. End to end: Heimdall vs real products
 
-<!-- E2E_RESULTS -->
-*Populated by `./bench/run-e2e.sh`; see `bench-results/e2e-results.md`.*
+64 MiB object, 10s measured per cell after a 5s warmup, three concurrency
+levels. Every response body was byte-compared against the source: **zero
+integrity failures and zero errors across all 36 cells**, for every target.
+
+### Read this caveat before the numbers
+
+Everything ran on one 12-core machine: the load generator, Heimdall's seven
+JVMs, MinIO, nginx and SeaweedFS, all competing for the same CPU. That
+structurally penalises Heimdall, which is seven processes plus a proxy hop,
+against nginx and MinIO, which are one process each. On separate hardware the
+gaps below would narrow. They would not close - the architectural costs are
+real - but treat these as the shape of the difference, not its exact size.
 
 ### What is being compared, and why these three
 
@@ -293,6 +303,157 @@ column in the results tables is that check; any non-zero value invalidates its
 row.
 
 ---
+
+### Heimdall against MinIO read directly
+
+The comparison that matters: same hardware, same storage engine, same bytes,
+with and without everything Heimdall adds.
+
+| workload | conc | Heimdall MiB/s | MinIO MiB/s | ratio |
+|---|---:|---:|---:|---:|
+| startup-1MiB | 1 | 94.8 | 483.6 | **5.1x slower** |
+| startup-1MiB | 8 | 271.4 | 1412.0 | 5.2x slower |
+| startup-1MiB | 32 | 330.5 | 1285.5 | 3.9x slower |
+| seek-4MiB | 1 | 302.0 | 775.0 | 2.6x slower |
+| seek-4MiB | 8 | 574.4 | 1802.2 | 3.1x slower |
+| seek-4MiB | 32 | 619.2 | 1512.7 | 2.4x slower |
+| full-download | 1 | 515.5 | 979.1 | **1.9x slower** |
+| full-download | 8 | 731.8 | 1581.8 | 2.2x slower |
+| full-download | 32 | 752.5 | 1699.5 | 2.3x slower |
+
+**The gap is a per-request cost, not a bandwidth cost.** It shrinks steadily as
+reads get larger - 5.1x on a 1 MiB read, 2.6x on 4 MiB, 1.9x on the whole 64 MiB
+object. Heimdall's streaming throughput is fine; what it pays for is *starting*
+a read.
+
+### Where the per-request cost actually goes
+
+Time-to-first-byte isolates it, at concurrency 1:
+
+| target | startup TTFB p50 | vs MinIO |
+|---|---:|---:|
+| `nginx` | 0.18 ms | - |
+| `minio-direct` | 1.00 ms | - |
+| `seaweedfs` | 0.92 ms | 0.9x |
+| **`heimdall`** | **8.82 ms** | **8.8x** |
+
+Nearly 9x, on a read that only transfers a megabyte. Two design decisions
+account for it, and both are visible in the code:
+
+**A serialized metadata round-trip before any data moves.**
+`StreamingOrchestratorService.prepare()` fetches the object's metadata from a
+node before it can plan which chunks to fetch - and that node then does its own
+`GET` of `meta.json` from MinIO. So every read begins with a full
+gateway to node to MinIO round-trip that transfers no video at all. MinIO-direct
+has no equivalent step. This is the single largest contributor and it is
+straightforwardly fixable: object metadata is immutable once written, so
+caching it at the gateway would remove the hop entirely for every read after
+the first.
+
+**Chunking turns one transfer into many requests.** A 64 MiB object at the 1 MiB
+default is 64 separate HTTP fetches, each with its own request, response and
+failover bookkeeping, against MinIO's single streaming response. That is the
+price of being able to fetch different chunks from different replicas and fail
+over per chunk - it is what the design buys, not an accident - but it is not
+free.
+
+There is also a saturation point worth naming: at concurrency 32, full-download
+TTFB reaches 2375 ms. 32 concurrent reads x 64 chunks is over 2,000 chunk
+fetches contending for a `fetch-pool-size` of 16. That default is comfortable at
+low concurrency and is the binding constraint at high concurrency.
+
+### All four targets
+
+Peak throughput observed per target, across all workloads:
+
+| target | best MiB/s | what it represents |
+|---|---:|---|
+| `nginx` | 2596.7 | The plain-HTTP ceiling. No redundancy, no distribution - one file, one disk, `sendfile`. |
+| `minio-direct` | 1699.5 | Heimdall's own backing store, unmediated. |
+| `seaweedfs` | 1470.7 | A real distributed object store, the closest architectural peer. |
+| `heimdall` | 752.5 | 29% of the nginx ceiling; 44% of MinIO. |
+
+SeaweedFS is the useful sanity check: it is also a distributed store with its own
+replication and an S3 gateway in front, and it lands at roughly MinIO's level -
+sometimes below it (1172.9 vs 1512.7 on seek at concurrency 32). So a
+distribution layer does cost something in every implementation. Heimdall's is
+simply more expensive than SeaweedFS's, by roughly 2x.
+
+### What the difference buys
+
+None of the faster targets do what Heimdall does. nginx serving a static file
+has no redundancy whatsoever - lose the disk, lose the video. `minio-direct` is
+a single deployment with no read fan-out. Heimdall spreads reads across
+replicas and, as the integration tests demonstrate against real killed
+processes, keeps serving correct bytes with every replica of an object's
+primary dead.
+
+The honest summary is that this costs **2-5x throughput and ~9x time-to-first-byte
+against reading the backing store directly**, most of which is per-request
+overhead concentrated in one avoidable metadata round-trip. That is a real
+price, it is larger than it needs to be, and the profiling above says exactly
+where to start.
+
+### Full per-cell results
+
+All times in milliseconds. `errors` counts non-2xx and failed requests; `bad`
+counts responses whose bytes did not match the source object.
+
+<details>
+<summary>36 cells: 4 targets x 3 workloads x 3 concurrency levels</summary>
+
+### startup-1MiB
+
+| target | conc | MiB/s | ops/s | TTFB p50 | TTFB p99 | total p50 | total p99 | errors | bad |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| `heimdall` | 1 | 94.79 | 95 | 8.82 | 15.32 | 10.17 | 17.90 | 0 | 0 |
+| `minio-direct` | 1 | 483.60 | 484 | 1.00 | 2.56 | 1.94 | 3.83 | 0 | 0 |
+| `nginx` | 1 | 910.34 | 910 | 0.18 | 0.39 | 1.05 | 1.72 | 0 | 0 |
+| `seaweedfs` | 1 | 521.12 | 521 | 0.92 | 1.99 | 1.82 | 3.55 | 0 | 0 |
+| `heimdall` | 8 | 271.44 | 271 | 21.39 | 46.44 | 27.88 | 56.82 | 0 | 0 |
+| `minio-direct` | 8 | 1412.03 | 1412 | 2.38 | 7.49 | 5.30 | 13.98 | 0 | 0 |
+| `nginx` | 8 | 2333.16 | 2333 | 0.48 | 1.15 | 3.29 | 5.35 | 0 | 0 |
+| `seaweedfs` | 8 | 1373.97 | 1374 | 3.14 | 4.87 | 5.69 | 9.57 | 0 | 0 |
+| `heimdall` | 32 | 330.45 | 330 | 76.98 | 168.09 | 91.61 | 190.45 | 0 | 0 |
+| `minio-direct` | 32 | 1285.50 | 1286 | 3.54 | 13.48 | 23.38 | 39.47 | 0 | 0 |
+| `nginx` | 32 | 2227.35 | 2227 | 1.21 | 2.49 | 13.80 | 21.64 | 0 | 0 |
+| `seaweedfs` | 32 | 1397.97 | 1398 | 3.57 | 7.67 | 22.63 | 27.92 | 0 | 0 |
+
+### seek-4MiB
+
+| target | conc | MiB/s | ops/s | TTFB p50 | TTFB p99 | total p50 | total p99 | errors | bad |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| `heimdall` | 1 | 302.03 | 76 | 7.49 | 15.93 | 12.67 | 21.92 | 0 | 0 |
+| `minio-direct` | 1 | 775.02 | 194 | 1.12 | 2.40 | 4.94 | 9.96 | 0 | 0 |
+| `nginx` | 1 | 1029.09 | 257 | 0.32 | 0.58 | 3.72 | 6.31 | 0 | 0 |
+| `seaweedfs` | 1 | 747.43 | 187 | 1.30 | 2.44 | 5.32 | 7.02 | 0 | 0 |
+| `heimdall` | 8 | 574.43 | 144 | 29.45 | 64.36 | 54.17 | 98.31 | 0 | 0 |
+| `minio-direct` | 8 | 1802.22 | 451 | 1.79 | 6.94 | 16.95 | 29.12 | 0 | 0 |
+| `nginx` | 8 | 2387.86 | 597 | 0.57 | 1.68 | 13.03 | 20.03 | 0 | 0 |
+| `seaweedfs` | 8 | 1470.65 | 368 | 3.90 | 12.02 | 21.53 | 30.88 | 0 | 0 |
+| `heimdall` | 32 | 619.15 | 155 | 166.89 | 215.49 | 204.24 | 271.31 | 0 | 0 |
+| `minio-direct` | 32 | 1512.73 | 378 | 4.17 | 15.45 | 83.87 | 109.82 | 0 | 0 |
+| `nginx` | 32 | 2106.00 | 527 | 1.35 | 3.38 | 60.83 | 77.37 | 0 | 0 |
+| `seaweedfs` | 32 | 1172.90 | 293 | 5.46 | 21.69 | 109.29 | 147.39 | 0 | 0 |
+
+### full-download
+
+| target | conc | MiB/s | ops/s | TTFB p50 | TTFB p99 | total p50 | total p99 | errors | bad |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| `heimdall` | 1 | 515.45 | 8 | 12.22 | 23.65 | 123.20 | 150.01 | 0 | 0 |
+| `minio-direct` | 1 | 979.14 | 15 | 1.30 | 1.90 | 64.81 | 77.86 | 0 | 0 |
+| `nginx` | 1 | 1075.20 | 17 | 0.43 | 0.72 | 59.05 | 73.12 | 0 | 0 |
+| `seaweedfs` | 1 | 875.38 | 14 | 2.33 | 3.26 | 72.39 | 101.25 | 0 | 0 |
+| `heimdall` | 8 | 731.82 | 11 | 406.48 | 524.01 | 680.07 | 885.76 | 0 | 0 |
+| `minio-direct` | 8 | 1581.84 | 25 | 2.63 | 8.73 | 321.90 | 375.74 | 0 | 0 |
+| `nginx` | 8 | 2596.69 | 41 | 0.60 | 1.74 | 193.75 | 233.88 | 0 | 0 |
+| `seaweedfs` | 8 | 1327.96 | 21 | 8.02 | 18.60 | 386.64 | 440.78 | 0 | 0 |
+| `heimdall` | 32 | 752.54 | 12 | 2375.71 | 2615.84 | 2685.28 | 2911.68 | 0 | 0 |
+| `minio-direct` | 32 | 1699.49 | 27 | 6.51 | 42.52 | 1189.07 | 1437.85 | 0 | 0 |
+| `nginx` | 32 | 2562.56 | 40 | 1.36 | 4.91 | 793.68 | 842.41 | 0 | 0 |
+| `seaweedfs` | 32 | 1209.59 | 19 | 8.70 | 92.44 | 1624.64 | 2346.46 | 0 | 0 |
+
+</details>
 
 ## Reproducing
 

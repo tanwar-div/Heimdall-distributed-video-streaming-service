@@ -141,13 +141,28 @@ public final class LoadDriver {
             HttpResponse<InputStream> response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
             long headersAt = System.nanoTime();
 
-            byte[] body;
+            int status = response.statusCode();
+
+            // Compared incrementally against the source rather than buffered
+            // and compared at the end. Buffering would mean holding the whole
+            // response plus a copy of the expected slice per in-flight request
+            // - at 32 concurrent full downloads of a 64 MiB object that is
+            // several GiB of garbage, and the benchmark would be measuring its
+            // own allocator and GC as much as the server.
+            long received = 0;
+            boolean matches = true;
+            byte[] buffer = new byte[64 * 1024];
             try (InputStream in = response.body()) {
-                body = in.readAllBytes();
+                int read;
+                while ((read = in.read(buffer)) != -1) {
+                    if (matches && !regionMatches(buffer, read, start + received)) {
+                        matches = false;
+                    }
+                    received += read;
+                }
             }
             long finishedAt = System.nanoTime();
 
-            int status = response.statusCode();
             if (status != 200 && status != 206) {
                 if (errors != null) {
                     errors.incrementAndGet();
@@ -155,8 +170,7 @@ public final class LoadDriver {
                 return;
             }
 
-            if (integrityFailures != null
-                    && !Arrays.equals(body, Arrays.copyOfRange(sourceObject, (int) start, (int) end + 1))) {
+            if (integrityFailures != null && (!matches || received != end - start + 1)) {
                 integrityFailures.incrementAndGet();
                 return;
             }
@@ -165,7 +179,7 @@ public final class LoadDriver {
                 ttfb.record(headersAt - began);
                 total.record(finishedAt - began);
                 operations.incrementAndGet();
-                bytes.addAndGet(body.length);
+                bytes.addAndGet(received);
             }
         } catch (IOException | InterruptedException e) {
             if (errors != null) {
@@ -175,6 +189,15 @@ public final class LoadDriver {
                 Thread.currentThread().interrupt();
             }
         }
+    }
+
+    /** True if {@code length} bytes of {@code buffer} equal the source object starting at {@code sourceOffset}. */
+    private boolean regionMatches(byte[] buffer, int length, long sourceOffset) {
+        if (sourceOffset + length > sourceObject.length) {
+            return false;
+        }
+        return Arrays.equals(buffer, 0, length,
+                sourceObject, (int) sourceOffset, (int) sourceOffset + length);
     }
 
     /** Confirms a target serves correct bytes at all before any timing is attempted. */
