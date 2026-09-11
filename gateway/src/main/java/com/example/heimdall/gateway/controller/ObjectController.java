@@ -90,6 +90,17 @@ public class ObjectController {
                 } catch (IllegalArgumentException unsatisfiable) {
                     throw new RangeNotSatisfiableException("Requested range not satisfiable", totalSize);
                 }
+                // Spring's HttpRange clamps the end of a range to the object's
+                // last byte but does not reject a *start* past it, so
+                // "bytes=999999999-" over a 512 KiB object yields start > end
+                // rather than throwing. Left unchecked that produces a 206 with
+                // a negative Content-Length and a body the client can only read
+                // as a truncated response. RFC 7233 s2.1 is explicit that a
+                // first-byte-pos at or beyond the representation length is
+                // unsatisfiable, so it becomes a clean 416 here.
+                if (start >= totalSize || start > end) {
+                    throw new RangeNotSatisfiableException("Requested range not satisfiable", totalSize);
+                }
                 partial = true;
             }
         }

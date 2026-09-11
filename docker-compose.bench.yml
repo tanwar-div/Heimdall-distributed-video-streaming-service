@@ -1,0 +1,49 @@
+# Comparison baselines for the end-to-end benchmark. Brought up alongside the
+# main compose file, never instead of it:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.bench.yml up -d
+#
+# Each service here is a real product serving the *same* object over the same
+# HTTP semantics (GET plus RFC 7233 Range), so the load driver can hit all of
+# them through one client and the numbers are comparable.
+#
+# MinIO is not repeated here: the main compose file already runs it, and the
+# benchmark reads it directly on :9000 to isolate what the Heimdall layer in
+# front of it costs and buys.
+name: heimdall
+
+services:
+  # The plain-HTTP-file-server ceiling. nginx serving a file off local disk with
+  # sendfile is about as fast as Range-capable HTTP gets on this hardware, so it
+  # is the ceiling every other target is measured against rather than a peer.
+  bench-nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "8090:80"
+    volumes:
+      - ./bench-data:/usr/share/nginx/html:ro
+      - ./bench/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    restart: unless-stopped
+
+  # SeaweedFS: the closest architectural peer in this comparison - a real
+  # distributed object store with a master/volume-server split and its own
+  # replication, fronted by an S3 gateway. Run in "server" mode so master,
+  # volume server, filer and S3 endpoint come up as one container.
+  bench-seaweedfs:
+    image: chrislusf/seaweedfs:3.80
+    command: >
+      server
+      -dir=/data
+      -master.volumeSizeLimitMB=1024
+      -volume.max=20
+      -s3
+      -s3.port=8333
+      -filer
+    ports:
+      - "8333:8333"
+    volumes:
+      - seaweedfs-data:/data
+    restart: unless-stopped
+
+volumes:
+  seaweedfs-data:

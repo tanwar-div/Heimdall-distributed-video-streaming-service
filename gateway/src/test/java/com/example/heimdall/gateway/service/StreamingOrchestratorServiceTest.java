@@ -6,6 +6,8 @@ import com.example.heimdall.gateway.config.GatewayProperties;
 import com.example.heimdall.gateway.model.PrimaryNode;
 import com.example.heimdall.gateway.model.ReplicaNode;
 import com.example.heimdall.gateway.service.StreamingOrchestratorService.PreparedStream;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -59,7 +61,8 @@ class StreamingOrchestratorServiceTest {
         ring.addMember(primary.id(), primary);
 
         LoadBalancerService loadBalancerService = new LoadBalancerService(ring, properties);
-        service = new StreamingOrchestratorService(loadBalancerService, nodeClient, properties, executor);
+        MeterRegistry meterRegistry = new SimpleMeterRegistry();
+        service = new StreamingOrchestratorService(loadBalancerService, nodeClient, properties, executor, meterRegistry);
     }
 
     @AfterEach

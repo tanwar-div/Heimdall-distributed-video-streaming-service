@@ -23,12 +23,54 @@ import java.util.List;
 @ConfigurationProperties(prefix = "heimdall.cluster")
 public class ClusterProperties {
 
+    /**
+     * Which routing algorithm maps an object key to its owning primary.
+     *
+     * <p>Selectable because the choice is an evidence-based one and the
+     * evidence is reproducible: {@code heimdall-benchmarks} measures every
+     * option's key distribution, rebalancing churn, lookup cost and memory
+     * footprint, and BENCHMARKS.md records the run that set this default.
+     */
+    public enum Router {
+        /** Classic consistent-hash ring over {@link #virtualNodes} virtual points per primary. */
+        RING,
+        /** libketama's ring, as used by memcached clients. */
+        KETAMA,
+        /** Rendezvous / highest-random-weight hashing. The default; see BENCHMARKS.md. */
+        RENDEZVOUS
+    }
+
+    private Router router = Router.RENDEZVOUS;
+
+    /**
+     * Hash used by the {@code RING} router. Ignored by the others, which have
+     * their hash fixed by the algorithm's definition.
+     */
+    @NotBlank
+    private String hashFunction = "murmur3_128";
+
     @Positive
     private int virtualNodes = 100;
 
     @NotEmpty
     @Valid
     private List<PrimaryConfig> primaries = new ArrayList<>();
+
+    public Router getRouter() {
+        return router;
+    }
+
+    public void setRouter(Router router) {
+        this.router = router;
+    }
+
+    public String getHashFunction() {
+        return hashFunction;
+    }
+
+    public void setHashFunction(String hashFunction) {
+        this.hashFunction = hashFunction;
+    }
 
     public int getVirtualNodes() {
         return virtualNodes;

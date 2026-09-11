@@ -17,6 +17,13 @@ heimdall:
   fetch-pool-size: ${FETCH_POOL_SIZE:16}
   node-request-timeout-ms: ${NODE_REQUEST_TIMEOUT_MS:15000}
   cluster:
+    # Key -> owning-primary routing algorithm: RENDEZVOUS (default), RING, or
+    # KETAMA. Chosen by measurement, not preference - see BENCHMARKS.md.
+    router: ${CLUSTER_ROUTER:RENDEZVOUS}
+    # Hash used by RENDEZVOUS and by RING. crc32 is the project's original
+    # choice and is kept selectable so its cost stays reproducible.
+    hash-function: ${CLUSTER_HASH:murmur3_128}
+    # Only read when router is RING.
     virtual-nodes: ${VIRTUAL_NODES:100}
     # Default topology for running everything locally, one JVM per node, via
     # `mvn spring-boot:run` with SERVER_PORT/NODE_ID/NODE_ROLE overridden per

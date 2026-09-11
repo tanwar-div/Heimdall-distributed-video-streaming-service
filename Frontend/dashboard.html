@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Heimdall Dashboard</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <nav class="topnav">
+    <div class="brand">🛡️ Heimdall</div>
+    <div class="links">
+      <a href="dashboard.html" class="active">Dashboard</a>
+      <a href="upload.html">Upload</a>
+      <a href="library.html">Library</a>
+    </div>
+    <button id="logoutBtn" class="ghost">Log out</button>
+  </nav>
+
+  <main class="page">
+    <h1>Cluster overview</h1>
+    <p class="subtitle">Live counters read straight from the gateway's Micrometer registry, refreshed every 3 seconds.</p>
+
+    <div id="dashboardError" class="message error hidden"></div>
+
+    <div class="stat-grid">
+      <div class="stat-card"><div class="label">Total uploads</div><div class="value" id="statUploads">-</div></div>
+      <div class="stat-card"><div class="label">Total downloads</div><div class="value" id="statDownloads">-</div></div>
+      <div class="stat-card"><div class="label">Failovers triggered</div><div class="value" id="statFailovers">-</div></div>
+      <div class="stat-card"><div class="label">Avg chunk fetch</div><div class="value" id="statLatency">-</div></div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="card chart-card">
+        <h2>Uploads by primary</h2>
+        <canvas id="uploadsChart"></canvas>
+      </div>
+      <div class="card chart-card">
+        <h2>Reads by primary</h2>
+        <canvas id="readsChart"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Node health</h2>
+      <div id="nodeList" class="node-list">
+        <div class="empty-state">Loading cluster status&hellip;</div>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>
