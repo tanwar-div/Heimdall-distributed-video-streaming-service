@@ -19,7 +19,10 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addMapping("/objects/**")
                 .allowedOriginPatterns("*")
                 .allowedMethods("GET", "POST", "DELETE")
-                .allowedHeaders("*");
+                .allowedHeaders("*")
+                // Without these, a page on another origin can make a ranged
+                // request but cannot read back which bytes it received.
+                .exposedHeaders("Content-Range", "Accept-Ranges", "Content-Length");
         registry.addMapping("/cluster/**")
                 .allowedOriginPatterns("*")
                 .allowedMethods("GET");

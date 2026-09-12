@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Heimdall · video load balancer</title>
+  <meta name="description" content="A distributed video-streaming load balancer in Java, benchmarked against MinIO, SeaweedFS and nginx.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+  <link rel="stylesheet" href="assets/style.css?v=b2f81eedc2">
+  <script src="config.js?v=72645a1b37"></script>
+  <script src="assets/charts.js?v=952330a318" defer></script>
+  <script src="assets/app.js?v=f2c8cfe219" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="#top">Heimdall</a>
+      <nav class="site-nav" aria-label="Sections">
+        <a href="#how-it-works">How it works</a>
+        <a href="#routing">Routing</a>
+        <a href="#comparison">vs. real products</a>
+        <a href="#testing">Testing</a>
+        <a data-repo-link href="https://github.com/tanwar-div/Heimdall-distributed-video-streaming-service">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero wrap">
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">Distributed video streaming · Java 21 · Spring Boot</p>
+          <h1>A video load balancer, measured against MinIO and nginx</h1>
+          <p class="lede">Heimdall stores each video on a shard, replicates it, and serves every seek by fetching only the chunks it needs from the shard's replicas, switching nodes when one fails. Every algorithm in it is benchmarked, and the whole system is compared with MinIO, SeaweedFS and nginx.</p>
+          <div class="hero-actions">
+            <a class="button primary" data-repo-link href="https://github.com/tanwar-div/Heimdall-distributed-video-streaming-service">View the source</a>
+            <a class="button" data-report-link href="https://github.com/tanwar-div/Heimdall-distributed-video-streaming-service/blob/main/BENCHMARKS.md">Read the benchmarks</a>
+          </div>
+          <div id="live-status" class="status-pill" role="status" aria-live="polite" hidden></div>
+        </div>
+        <figure id="hero-media" class="hero-media">
+          <div class="video-frame"></div>
+          <figcaption class="hint">Heimdall streaming from a six-node cluster: reads spread across replicas, and playback carries on when a node is stopped.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section id="live-section" class="section" hidden>
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Live cluster</h2>
+          <p>A live view of a running Heimdall cluster. Press play, jump around the timeline, and watch which nodes serve the chunks.</p>
+        </div>
+
+        <div>
+          <div class="live-grid">
+            <div class="card">
+              <div class="video-frame">
+                <video id="live-video" controls preload="metadata" playsinline hidden></video>
+                <div id="live-offline" class="video-offline">
+                  <strong>Connecting</strong>
+                  <span id="live-offline-message">Looking for the local cluster…</span>
+                </div>
+              </div>
+              <ol class="steps">
+                <li>The gateway picks the video's shard with rendezvous hashing.</li>
+                <li>It works out which 1 MiB chunks cover the bytes the player asked for.</li>
+                <li>It fetches those chunks from the shard's replicas at the same time.</li>
+                <li>If a node doesn't answer, the next one does. The primary is the last resort.</li>
+              </ol>
+            </div>
+            <div id="live-tiles" class="tiles" aria-label="Live cluster numbers"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <h3>Where the chunks came from</h3>
+            </div>
+            <p id="live-balance" class="small muted"></p>
+            <div id="live-nodes" class="node-list"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="how-it-works" class="section">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>How it works</h2>
+          <p>Three kinds of service, each a separate process talking to the others over HTTP: a gateway, storage nodes acting as primaries or replicas, and MinIO for the bytes.</p>
+        </div>
+
+        <figure class="card">
+          <div class="diagram-wrap">
+            <svg class="diagram" viewBox="0 0 900 376" role="img" aria-labelledby="diagram-title diagram-desc">
+              <title id="diagram-title">Heimdall architecture</title>
+              <desc id="diagram-desc">A client talks to the gateway over HTTP. The gateway writes to each shard's primary and reads chunks from the shard's replicas. Primaries replicate asynchronously to their replicas. Every node stores its chunks in MinIO.</desc>
+              <defs>
+                <marker id="dg-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="dg-arrow" d="M0,0 L10,5 L0,10 z"/></marker>
+                <marker id="dg-arrow-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="dg-arrow is-accent" d="M0,0 L10,5 L0,10 z"/></marker>
+              </defs>
+
+              <!-- client and gateway -->
+              <rect class="dg-node" x="20" y="156" width="130" height="64" rx="10"/>
+              <text class="dg-title" x="85" y="184" text-anchor="middle">Client</text>
+              <text class="dg-sub" x="85" y="203" text-anchor="middle">watch · seek</text>
+
+              <path class="dg-edge is-read" d="M150,188 H236" marker-start="url(#dg-arrow-accent)" marker-end="url(#dg-arrow-accent)"/>
+              <text class="dg-sub" x="193" y="176" text-anchor="middle">HTTP</text>
+
+              <rect class="dg-node is-gateway" x="236" y="136" width="176" height="104" rx="10"/>
+              <text class="dg-title" x="324" y="168" text-anchor="middle">Gateway</text>
+              <text class="dg-sub" x="324" y="189" text-anchor="middle">picks the shard</text>
+              <text class="dg-sub" x="324" y="206" text-anchor="middle">plans byte ranges</text>
+              <text class="dg-sub" x="324" y="223" text-anchor="middle">fails over</text>
+
+              <!-- shard 0 -->
+              <rect class="dg-group" x="470" y="24" width="270" height="150" rx="14"/>
+              <text class="dg-label" x="486" y="44">SHARD 0</text>
+              <rect class="dg-node" x="486" y="54" width="110" height="40" rx="8"/>
+              <text class="dg-title" x="541" y="79" text-anchor="middle">Primary</text>
+              <rect class="dg-subgroup" x="478" y="106" width="254" height="56" rx="10"/>
+              <rect class="dg-node" x="486" y="114" width="110" height="40" rx="8"/>
+              <text class="dg-title" x="541" y="139" text-anchor="middle">Replica</text>
+              <rect class="dg-node" x="614" y="114" width="110" height="40" rx="8"/>
+              <text class="dg-title" x="669" y="139" text-anchor="middle">Replica</text>
+              <path class="dg-edge is-replication" d="M541,94 V113" marker-end="url(#dg-arrow)"/>
+              <path class="dg-edge is-replication" d="M596,86 C640,86 669,94 669,113" marker-end="url(#dg-arrow)"/>
+
+              <!-- shard 1 -->
+              <rect class="dg-group" x="470" y="202" width="270" height="150" rx="14"/>
+              <text class="dg-label" x="486" y="222">SHARD 1</text>
+              <rect class="dg-node" x="486" y="232" width="110" height="40" rx="8"/>
+              <text class="dg-title" x="541" y="257" text-anchor="middle">Primary</text>
+              <rect class="dg-subgroup" x="478" y="284" width="254" height="56" rx="10"/>
+              <rect class="dg-node" x="486" y="292" width="110" height="40" rx="8"/>
+              <text class="dg-title" x="541" y="317" text-anchor="middle">Replica</text>
+              <rect class="dg-node" x="614" y="292" width="110" height="40" rx="8"/>
+              <text class="dg-title" x="669" y="317" text-anchor="middle">Replica</text>
+              <path class="dg-edge is-replication" d="M541,272 V291" marker-end="url(#dg-arrow)"/>
+              <path class="dg-edge is-replication" d="M596,264 C640,264 669,272 669,291" marker-end="url(#dg-arrow)"/>
+
+              <!-- gateway to shards: writes to primaries, reads from replicas -->
+              <path class="dg-edge" d="M412,160 C444,160 454,74 485,74" marker-end="url(#dg-arrow)"/>
+              <path class="dg-edge is-read" d="M412,176 C446,176 446,134 477,134" marker-end="url(#dg-arrow-accent)"/>
+              <path class="dg-edge" d="M412,200 C444,200 454,252 485,252" marker-end="url(#dg-arrow)"/>
+              <path class="dg-edge is-read" d="M412,216 C446,216 446,312 477,312" marker-end="url(#dg-arrow-accent)"/>
+
+              <!-- storage -->
+              <path class="dg-edge" d="M740,99 C752,99 752,176 763,176" marker-end="url(#dg-arrow)"/>
+              <path class="dg-edge" d="M740,277 C752,277 752,204 763,204" marker-end="url(#dg-arrow)"/>
+              <path class="dg-node" d="M764,160 V228 A56,11 0 0 0 876,228 V160"/>
+              <ellipse class="dg-node" cx="820" cy="160" rx="56" ry="11"/>
+              <text class="dg-title" x="820" y="196" text-anchor="middle">MinIO</text>
+              <text class="dg-sub" x="820" y="214" text-anchor="middle">bucket per node</text>
+            </svg>
+          </div>
+          <div class="diagram-legend" aria-hidden="true">
+            <span><span class="diagram-key is-read"></span>reads: chunks fetched in parallel</span>
+            <span><span class="diagram-key"></span>writes and storage</span>
+            <span><span class="diagram-key is-replication"></span>asynchronous replication</span>
+          </div>
+        </figure>
+
+        <div class="features">
+          <div class="card feature">
+            <h3>Routing by rendezvous hashing</h3>
+            <p>Every video belongs to one primary. Rendezvous hashing keeps each primary within about 2% of an even share, and when a node joins or leaves, only that node's videos move.</p>
+          </div>
+          <div class="card feature">
+            <h3>Seeking without downloading</h3>
+            <p>Videos are stored as 1 MiB chunks. A seek is an HTTP Range request, so the gateway fetches only the chunks that overlap the bytes the player asked for.</p>
+          </div>
+          <div class="card feature">
+            <h3>Replicas that share the reads</h3>
+            <p>Primaries copy each upload to their replicas. Each read fetches its chunks in parallel across a configurable share of the replicas, and falls back to the next node, then the primary, when one fails.</p>
+          </div>
+          <div class="card feature">
+            <h3>Streaming end to end</h3>
+            <p>Uploads and downloads pass through without ever being held in memory whole, so even a multi-gigabyte video costs about one chunk of memory at a time.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="routing" class="section">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Routing: the measurement that changed the code</h2>
+          <p>Heimdall first assigned videos to shards with a consistent-hash ring hashed by CRC-32. It passed every correctness test. Measured against eight alternatives, it spread videos the least evenly, so it was replaced with rendezvous hashing.</p>
+        </div>
+
+        <div id="routing-scope"></div>
+        <p id="routing-summary" class="lead-note small muted"></p>
+        <figure id="chart-peak" class="card"></figure>
+        <figure id="chart-churn" class="card"></figure>
+
+        <div class="card prose">
+          <p><strong>Why not jump hash?</strong> It's the fastest option and spreads keys evenly, but it numbers nodes by position. When any node except the last one fails, every node after it shifts down and nearly every video moves. Switch the cluster size above to 8 or 32 to see it.</p>
+        </div>
+
+        <figure id="chart-lookup" class="card"></figure>
+      </div>
+    </section>
+
+    <section id="comparison" class="section">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Against real products</h2>
+          <p>The same 64 MiB file, read with identical HTTP requests from Heimdall, from the MinIO it stores its chunks in, from SeaweedFS, and from nginx serving a plain file. Every response was checked byte for byte.</p>
+        </div>
+
+        <div id="e2e-tiles" class="tiles is-wide"></div>
+        <div id="e2e-scope" class="after-tiles"></div>
+        <figure id="chart-throughput" class="card"></figure>
+        <div class="grid-2">
+          <figure id="chart-ttfb" class="card"></figure>
+          <div class="card prose">
+            <h3>Where Heimdall's time goes</h3>
+            <p>Most of the gap is one extra round trip at the start of every read. Before fetching any video, the gateway asks a storage node for the file's metadata, and that node reads it from MinIO. Metadata never changes after upload, so caching it in the gateway is the next improvement.</p>
+            <p>The rest is the design's trade-off. A 64 MiB file becomes 64 separate chunk requests, which is what lets different replicas serve different parts and lets each chunk fail over on its own.</p>
+            <p class="small">All four systems ran on one 12-core machine together with the load generator. That penalises Heimdall's seven processes the most, so treat these as relative results.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="testing" class="section">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Testing</h2>
+          <p>Property-based tests check the algorithms across whole ranges of generated inputs instead of a few examples. End-to-end tests start a real cluster, stop real processes, and check the bytes that come back.</p>
+        </div>
+        <div id="test-tiles" class="tiles is-wide"></div>
+        <div class="card bug-card">
+          <h3>Found by the end-to-end tests: <span id="bug-summary"></span></h3>
+          <p id="bug-detail"></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>Built by Divyanshu Tanwar. Every figure on this page is generated from the benchmark results in the repository.</p>
+      <p><a data-repo-link href="https://github.com/tanwar-div/Heimdall-distributed-video-streaming-service">Source code</a> · <a data-report-link href="https://github.com/tanwar-div/Heimdall-distributed-video-streaming-service/blob/main/BENCHMARKS.md">Full benchmark report</a></p>
+    </div>
+  </footer>
+</body>
+</html>
