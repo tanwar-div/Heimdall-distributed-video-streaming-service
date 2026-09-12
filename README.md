@@ -9,6 +9,9 @@ downloading the whole file.
 Three separately deployable Spring Boot services making real network calls to
 each other — not a single-JVM simulation.
 
+**[Live showcase](https://tanwar-div.github.io/Heimdall-distributed-video-streaming-service/)** —
+the demo, the architecture, and the benchmark results as charts.
+
 ## Architecture
 
 ```mermaid
