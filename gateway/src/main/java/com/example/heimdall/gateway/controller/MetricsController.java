@@ -1,5 +1,6 @@
 package com.example.heimdall.gateway.controller;
 
+import com.example.heimdall.gateway.dto.LiveMetricsDto;
 import com.example.heimdall.gateway.dto.MetricsSummaryDto;
 import com.example.heimdall.gateway.dto.NodeHealthDto;
 import com.example.heimdall.gateway.service.MetricsService;
@@ -29,5 +30,11 @@ public class MetricsController {
     @GetMapping("/cluster/health")
     public List<NodeHealthDto> health() {
         return metricsService.health();
+    }
+
+    /** Per-node traffic, windowed latency percentiles and health. Polled by the public showcase; cached for one second. */
+    @GetMapping("/metrics/live")
+    public LiveMetricsDto live() {
+        return metricsService.live();
     }
 }

@@ -1,0 +1,1337 @@
+{
+  "environment": {
+    "cores": 12,
+    "memoryGiB": 14,
+    "storage": "NVMe",
+    "jdk": "21.0.12",
+    "jmh": "1.37",
+    "forks": 2,
+    "warmup": "3x2 s",
+    "measurement": "5x2 s",
+    "note": "Everything - load generator included - ran on one machine. Compare targets, not absolute figures."
+  },
+  "routingQuality": [
+    {
+      "members": 2,
+      "algorithm": "ring/crc32/v100",
+      "peakLoad": 1.275,
+      "minLoad": 0.725,
+      "coefficientOfVariation": 0.275,
+      "churnOnLossPct": 63.73,
+      "churnOnLossVsOptimal": 1.275,
+      "churnOnJoinPct": 34.61,
+      "churnOnJoinVsOptimal": 1.038,
+      "routingStateBytes": 11161.6
+    },
+    {
+      "members": 2,
+      "algorithm": "ring/crc32/v500",
+      "peakLoad": 1.138,
+      "minLoad": 0.862,
+      "coefficientOfVariation": 0.138,
+      "churnOnLossPct": 56.92,
+      "churnOnLossVsOptimal": 1.138,
+      "churnOnJoinPct": 40.73,
+      "churnOnJoinVsOptimal": 1.222,
+      "routingStateBytes": 56012.8
+    },
+    {
+      "members": 2,
+      "algorithm": "ring/fnv1a64/v100",
+      "peakLoad": 1.658,
+      "minLoad": 0.342,
+      "coefficientOfVariation": 0.658,
+      "churnOnLossPct": 82.91,
+      "churnOnLossVsOptimal": 1.658,
+      "churnOnJoinPct": 31.28,
+      "churnOnJoinVsOptimal": 0.939,
+      "routingStateBytes": 11161.6
+    },
+    {
+      "members": 2,
+      "algorithm": "ring/murmur3/v100",
+      "peakLoad": 1.067,
+      "minLoad": 0.933,
+      "coefficientOfVariation": 0.067,
+      "churnOnLossPct": 46.64,
+      "churnOnLossVsOptimal": 0.933,
+      "churnOnJoinPct": 30.72,
+      "churnOnJoinVsOptimal": 0.922,
+      "routingStateBytes": 11161.6
+    },
+    {
+      "members": 2,
+      "algorithm": "ring/murmur3/v500",
+      "peakLoad": 1.053,
+      "minLoad": 0.948,
+      "coefficientOfVariation": 0.053,
+      "churnOnLossPct": 47.38,
+      "churnOnLossVsOptimal": 0.948,
+      "churnOnJoinPct": 34.24,
+      "churnOnJoinVsOptimal": 1.027,
+      "routingStateBytes": 56012.8
+    },
+    {
+      "members": 2,
+      "algorithm": "ring/md5/v100",
+      "peakLoad": 1.09,
+      "minLoad": 0.91,
+      "coefficientOfVariation": 0.09,
+      "churnOnLossPct": 45.49,
+      "churnOnLossVsOptimal": 0.91,
+      "churnOnJoinPct": 31.81,
+      "churnOnJoinVsOptimal": 0.954,
+      "routingStateBytes": 11161.6
+    },
+    {
+      "members": 2,
+      "algorithm": "ketama/md5/p160",
+      "peakLoad": 1.027,
+      "minLoad": 0.973,
+      "coefficientOfVariation": 0.027,
+      "churnOnLossPct": 51.34,
+      "churnOnLossVsOptimal": 1.027,
+      "churnOnJoinPct": 32.21,
+      "churnOnJoinVsOptimal": 0.966,
+      "routingStateBytes": 17920.0
+    },
+    {
+      "members": 2,
+      "algorithm": "rendezvous/murmur3",
+      "peakLoad": 1.001,
+      "minLoad": 0.999,
+      "coefficientOfVariation": 0.001,
+      "churnOnLossPct": 50.03,
+      "churnOnLossVsOptimal": 1.001,
+      "churnOnJoinPct": 33.29,
+      "churnOnJoinVsOptimal": 0.999,
+      "routingStateBytes": 96.0
+    },
+    {
+      "members": 2,
+      "algorithm": "jump/murmur3",
+      "peakLoad": 1.001,
+      "minLoad": 0.999,
+      "coefficientOfVariation": 0.001,
+      "churnOnLossPct": 49.94,
+      "churnOnLossVsOptimal": 0.999,
+      "churnOnJoinPct": 33.39,
+      "churnOnJoinVsOptimal": 1.002,
+      "routingStateBytes": 64.0
+    },
+    {
+      "members": 3,
+      "algorithm": "ring/crc32/v100",
+      "peakLoad": 1.205,
+      "minLoad": 0.757,
+      "coefficientOfVariation": 0.185,
+      "churnOnLossPct": 40.15,
+      "churnOnLossVsOptimal": 1.205,
+      "churnOnJoinPct": 22.63,
+      "churnOnJoinVsOptimal": 0.905,
+      "routingStateBytes": 16793.6
+    },
+    {
+      "members": 3,
+      "algorithm": "ring/crc32/v500",
+      "peakLoad": 1.222,
+      "minLoad": 0.835,
+      "coefficientOfVariation": 0.163,
+      "churnOnLossPct": 31.45,
+      "churnOnLossVsOptimal": 0.943,
+      "churnOnJoinPct": 23.74,
+      "churnOnJoinVsOptimal": 0.95,
+      "routingStateBytes": 83968.0
+    },
+    {
+      "members": 3,
+      "algorithm": "ring/fnv1a64/v100",
+      "peakLoad": 1.649,
+      "minLoad": 0.412,
+      "coefficientOfVariation": 0.507,
+      "churnOnLossPct": 54.98,
+      "churnOnLossVsOptimal": 1.649,
+      "churnOnJoinPct": 24.78,
+      "churnOnJoinVsOptimal": 0.991,
+      "routingStateBytes": 16793.6
+    },
+    {
+      "members": 3,
+      "algorithm": "ring/murmur3/v100",
+      "peakLoad": 1.074,
+      "minLoad": 0.922,
+      "coefficientOfVariation": 0.062,
+      "churnOnLossPct": 33.48,
+      "churnOnLossVsOptimal": 1.004,
+      "churnOnJoinPct": 24.95,
+      "churnOnJoinVsOptimal": 0.998,
+      "routingStateBytes": 16793.6
+    },
+    {
+      "members": 3,
+      "algorithm": "ring/murmur3/v500",
+      "peakLoad": 1.027,
+      "minLoad": 0.954,
+      "coefficientOfVariation": 0.033,
+      "churnOnLossPct": 31.79,
+      "churnOnLossVsOptimal": 0.954,
+      "churnOnJoinPct": 24.89,
+      "churnOnJoinVsOptimal": 0.996,
+      "routingStateBytes": 83968.0
+    },
+    {
+      "members": 3,
+      "algorithm": "ring/md5/v100",
+      "peakLoad": 1.127,
+      "minLoad": 0.919,
+      "coefficientOfVariation": 0.091,
+      "churnOnLossPct": 30.62,
+      "churnOnLossVsOptimal": 0.919,
+      "churnOnJoinPct": 24.89,
+      "churnOnJoinVsOptimal": 0.995,
+      "routingStateBytes": 16793.6
+    },
+    {
+      "members": 3,
+      "algorithm": "ketama/md5/p160",
+      "peakLoad": 1.063,
+      "minLoad": 0.966,
+      "coefficientOfVariation": 0.044,
+      "churnOnLossPct": 35.42,
+      "churnOnLossVsOptimal": 1.063,
+      "churnOnJoinPct": 22.99,
+      "churnOnJoinVsOptimal": 0.92,
+      "routingStateBytes": 26931.2
+    },
+    {
+      "members": 3,
+      "algorithm": "rendezvous/murmur3",
+      "peakLoad": 1.003,
+      "minLoad": 0.998,
+      "coefficientOfVariation": 0.002,
+      "churnOnLossPct": 33.43,
+      "churnOnLossVsOptimal": 1.003,
+      "churnOnJoinPct": 24.91,
+      "churnOnJoinVsOptimal": 0.996,
+      "routingStateBytes": 144.0
+    },
+    {
+      "members": 3,
+      "algorithm": "jump/murmur3",
+      "peakLoad": 1.002,
+      "minLoad": 0.998,
+      "coefficientOfVariation": 0.001,
+      "churnOnLossPct": 83.27,
+      "churnOnLossVsOptimal": 2.498,
+      "churnOnJoinPct": 25.05,
+      "churnOnJoinVsOptimal": 1.002,
+      "routingStateBytes": 96.0
+    },
+    {
+      "members": 8,
+      "algorithm": "ring/crc32/v100",
+      "peakLoad": 1.129,
+      "minLoad": 0.925,
+      "coefficientOfVariation": 0.078,
+      "churnOnLossPct": 12.71,
+      "churnOnLossVsOptimal": 1.017,
+      "churnOnJoinPct": 9.55,
+      "churnOnJoinVsOptimal": 0.86,
+      "routingStateBytes": 44851.2
+    },
+    {
+      "members": 8,
+      "algorithm": "ring/crc32/v500",
+      "peakLoad": 1.109,
+      "minLoad": 0.852,
+      "coefficientOfVariation": 0.09,
+      "churnOnLossPct": 13.19,
+      "churnOnLossVsOptimal": 1.055,
+      "churnOnJoinPct": 9.95,
+      "churnOnJoinVsOptimal": 0.895,
+      "routingStateBytes": 224051.2
+    },
+    {
+      "members": 8,
+      "algorithm": "ring/fnv1a64/v100",
+      "peakLoad": 1.826,
+      "minLoad": 0.455,
+      "coefficientOfVariation": 0.547,
+      "churnOnLossPct": 22.82,
+      "churnOnLossVsOptimal": 1.826,
+      "churnOnJoinPct": 8.19,
+      "churnOnJoinVsOptimal": 0.737,
+      "routingStateBytes": 44851.2
+    },
+    {
+      "members": 8,
+      "algorithm": "ring/murmur3/v100",
+      "peakLoad": 1.129,
+      "minLoad": 0.881,
+      "coefficientOfVariation": 0.096,
+      "churnOnLossPct": 12.94,
+      "churnOnLossVsOptimal": 1.035,
+      "churnOnJoinPct": 10.3,
+      "churnOnJoinVsOptimal": 0.927,
+      "routingStateBytes": 44851.2
+    },
+    {
+      "members": 8,
+      "algorithm": "ring/murmur3/v500",
+      "peakLoad": 1.088,
+      "minLoad": 0.958,
+      "coefficientOfVariation": 0.039,
+      "churnOnLossPct": 12.3,
+      "churnOnLossVsOptimal": 0.984,
+      "churnOnJoinPct": 10.67,
+      "churnOnJoinVsOptimal": 0.961,
+      "routingStateBytes": 224051.2
+    },
+    {
+      "members": 8,
+      "algorithm": "ring/md5/v100",
+      "peakLoad": 1.21,
+      "minLoad": 0.812,
+      "coefficientOfVariation": 0.142,
+      "churnOnLossPct": 10.78,
+      "churnOnLossVsOptimal": 0.862,
+      "churnOnJoinPct": 9.59,
+      "churnOnJoinVsOptimal": 0.863,
+      "routingStateBytes": 44851.2
+    },
+    {
+      "members": 8,
+      "algorithm": "ketama/md5/p160",
+      "peakLoad": 1.178,
+      "minLoad": 0.823,
+      "coefficientOfVariation": 0.117,
+      "churnOnLossPct": 13.77,
+      "churnOnLossVsOptimal": 1.102,
+      "churnOnJoinPct": 11.46,
+      "churnOnJoinVsOptimal": 1.031,
+      "routingStateBytes": 71680.0
+    },
+    {
+      "members": 8,
+      "algorithm": "rendezvous/murmur3",
+      "peakLoad": 1.004,
+      "minLoad": 0.994,
+      "coefficientOfVariation": 0.004,
+      "churnOnLossPct": 12.49,
+      "churnOnLossVsOptimal": 1.0,
+      "churnOnJoinPct": 11.18,
+      "churnOnJoinVsOptimal": 1.006,
+      "routingStateBytes": 384.0
+    },
+    {
+      "members": 8,
+      "algorithm": "jump/murmur3",
+      "peakLoad": 1.008,
+      "minLoad": 0.992,
+      "coefficientOfVariation": 0.006,
+      "churnOnLossPct": 98.2,
+      "churnOnLossVsOptimal": 7.856,
+      "churnOnJoinPct": 11.13,
+      "churnOnJoinVsOptimal": 1.002,
+      "routingStateBytes": 256.0
+    },
+    {
+      "members": 32,
+      "algorithm": "ring/crc32/v100",
+      "peakLoad": 1.364,
+      "minLoad": 0.694,
+      "coefficientOfVariation": 0.165,
+      "churnOnLossPct": 3.85,
+      "churnOnLossVsOptimal": 1.233,
+      "churnOnJoinPct": 2.84,
+      "churnOnJoinVsOptimal": 0.936,
+      "routingStateBytes": 179200.0
+    },
+    {
+      "members": 32,
+      "algorithm": "ring/crc32/v500",
+      "peakLoad": 1.424,
+      "minLoad": 0.721,
+      "coefficientOfVariation": 0.174,
+      "churnOnLossPct": 2.93,
+      "churnOnLossVsOptimal": 0.938,
+      "churnOnJoinPct": 3.55,
+      "churnOnJoinVsOptimal": 1.171,
+      "routingStateBytes": 896000.0
+    },
+    {
+      "members": 32,
+      "algorithm": "ring/fnv1a64/v100",
+      "peakLoad": 2.45,
+      "minLoad": 0.206,
+      "coefficientOfVariation": 0.545,
+      "churnOnLossPct": 3.81,
+      "churnOnLossVsOptimal": 1.218,
+      "churnOnJoinPct": 1.84,
+      "churnOnJoinVsOptimal": 0.607,
+      "routingStateBytes": 179200.0
+    },
+    {
+      "members": 32,
+      "algorithm": "ring/murmur3/v100",
+      "peakLoad": 1.344,
+      "minLoad": 0.806,
+      "coefficientOfVariation": 0.119,
+      "churnOnLossPct": 3.06,
+      "churnOnLossVsOptimal": 0.98,
+      "churnOnJoinPct": 3.03,
+      "churnOnJoinVsOptimal": 0.999,
+      "routingStateBytes": 179200.0
+    },
+    {
+      "members": 32,
+      "algorithm": "ring/murmur3/v500",
+      "peakLoad": 1.083,
+      "minLoad": 0.868,
+      "coefficientOfVariation": 0.051,
+      "churnOnLossPct": 3.13,
+      "churnOnLossVsOptimal": 1.002,
+      "churnOnJoinPct": 2.73,
+      "churnOnJoinVsOptimal": 0.9,
+      "routingStateBytes": 896000.0
+    },
+    {
+      "members": 32,
+      "algorithm": "ring/md5/v100",
+      "peakLoad": 1.25,
+      "minLoad": 0.794,
+      "coefficientOfVariation": 0.113,
+      "churnOnLossPct": 3.82,
+      "churnOnLossVsOptimal": 1.224,
+      "churnOnJoinPct": 3.2,
+      "churnOnJoinVsOptimal": 1.056,
+      "routingStateBytes": 179200.0
+    },
+    {
+      "members": 32,
+      "algorithm": "ketama/md5/p160",
+      "peakLoad": 1.191,
+      "minLoad": 0.846,
+      "coefficientOfVariation": 0.072,
+      "churnOnLossPct": 3.25,
+      "churnOnLossVsOptimal": 1.041,
+      "churnOnJoinPct": 3.15,
+      "churnOnJoinVsOptimal": 1.038,
+      "routingStateBytes": 286720.0
+    },
+    {
+      "members": 32,
+      "algorithm": "rendezvous/murmur3",
+      "peakLoad": 1.022,
+      "minLoad": 0.979,
+      "coefficientOfVariation": 0.012,
+      "churnOnLossPct": 3.19,
+      "churnOnLossVsOptimal": 1.019,
+      "churnOnJoinPct": 3.04,
+      "churnOnJoinVsOptimal": 1.004,
+      "routingStateBytes": 1536.0
+    },
+    {
+      "members": 32,
+      "algorithm": "jump/murmur3",
+      "peakLoad": 1.023,
+      "minLoad": 0.972,
+      "coefficientOfVariation": 0.014,
+      "churnOnLossPct": 99.91,
+      "churnOnLossVsOptimal": 31.973,
+      "churnOnJoinPct": 3.04,
+      "churnOnJoinVsOptimal": 1.003,
+      "routingStateBytes": 1024.0
+    }
+  ],
+  "throughput": {
+    "routerLookup": [
+      {
+        "algorithm": "ring/crc32/v100",
+        "members": 2,
+        "score": 39.20972888678084,
+        "error": 1.567800419385803,
+        "unit": "ns/op"
+      },
+      {
+        "algorithm": "ring/murmur3/v100",
+        "members": 2,
+        "score": 54.64020364432763,
+        "error": 1.2509010828195786,
+        "unit": "ns/op"
+      },
+      {
+        "algorithm": "ring/murmur3/v500",
+        "members": 2,
+        "score": 69.86376187575954,
+        "error": 1.8635451992350118,
+        "unit": "ns/op"
+      },
+      {
+        "algorithm": "ring/md5/v100",
+        "members": 2,
+        "score": 160.25425731525405,
+        "error": 3.6267137335532307,
+        "unit": "ns/op"
+      },
+      {
+        "algorithm": "ketama/md5/p160",
+        "members": 2,
+        "score": 161.65578877370714,
+        "error": 4.3125721241536406,
+        "unit": "ns/op"
+      },
+      {
+        "algorithm": "rendezvous/murmur3",
+        "members": 2,
+        "score": 20.018072394480352,
+        "error": 0.27472289425099056,
+        "unit": "ns/op"
+      },
+      {
+        "algorithm": "jump/murmur3",
+        "members": 2,
+        "score": 27.145481871075436,
+        "error": 0.24536654612363937,
+        "unit": "ns/op"
+      },
+      {
+        "algorithm": "ring/crc32/v100",
+        "members": 8,
+        "score": 59.73246421521054,
+        "error": 1.7710117736182427,
+        "unit": "ns/op"
+      },
+      {
+        "algorithm": "ring/murmur3/v100",
+        "members": 8,
+        "score": 66.20834859107515,
+        "error": 1.3088547159525288,
+        "unit": "ns/op"
+      },
+      {
+        "algorithm": "ring/murmur3/v500",
+        "members": 8,
+        "score": 86.08858896766826,
+        "error": 1.8252134011697507,
+        "unit": "ns/op"
+      },
+      {
+        "algorithm": "ring/md5/v100",
+        "members": 8,
+        "score": 175.79027518219885,
+        "error": 3.568584106682523,
+        "unit": "ns/op"
+      },
+      {
+        "algorithm": "ketama/md5/p160",
+        "members": 8,
+        "score": 178.6659891362803,
+        "error": 12.330688216413312,
+        "unit": "ns/op"
+      },
+      {
+        "algorithm": "rendezvous/murmur3",
+        "members": 8,
+        "score": 32.97364118702057,
+        "error": 2.8553751071582414,
+        "unit": "ns/op"
+      },
+      {
+        "algorithm": "jump/murmur3",
+        "members": 8,
+        "score": 30.95409092976123,
+        "error": 0.48990539426213014,
+        "unit": "ns/op"
+      },
+      {
+        "algorithm": "ring/crc32/v100",
+        "members": 32,
+        "score": 77.8154974094967,
+        "error": 1.1034022916691766,
+        "unit": "ns/op"
+      },
+      {
+        "algorithm": "ring/murmur3/v100",
+        "members": 32,
+        "score": 81.67411959080125,
+        "error": 1.251275002164727,
+        "unit": "ns/op"
+      },
+      {
+        "algorithm": "ring/murmur3/v500",
+        "members": 32,
+        "score": 111.90089910612053,
+        "error": 2.8366415890707257,
+        "unit": "ns/op"
+      },
+      {
+        "algorithm": "ring/md5/v100",
+        "members": 32,
+        "score": 187.31401043345022,
+        "error": 2.803535105701177,
+        "unit": "ns/op"
+      },
+      {
+        "algorithm": "ketama/md5/p160",
+        "members": 32,
+        "score": 198.54785922214995,
+        "error": 9.319850996263758,
+        "unit": "ns/op"
+      },
+      {
+        "algorithm": "rendezvous/murmur3",
+        "members": 32,
+        "score": 87.4210074176026,
+        "error": 9.938495729554136,
+        "unit": "ns/op"
+      },
+      {
+        "algorithm": "jump/murmur3",
+        "members": 32,
+        "score": 35.67944687694863,
+        "error": 0.4695221291081228,
+        "unit": "ns/op"
+      },
+      {
+        "algorithm": "ring/crc32/v100",
+        "members": 128,
+        "score": 103.25214864025065,
+        "error": 1.736253048929965,
+        "unit": "ns/op"
+      },
+      {
+        "algorithm": "ring/murmur3/v100",
+        "members": 128,
+        "score": 106.92315320302914,
+        "error": 0.8820118648080753,
+        "unit": "ns/op"
+      },
+      {
+        "algorithm": "ring/murmur3/v500",
+        "members": 128,
+        "score": 145.8656777020113,
+        "error": 1.7453187999086133,
+        "unit": "ns/op"
+      },
+      {
+        "algorithm": "ring/md5/v100",
+        "members": 128,
+        "score": 211.25870306982097,
+        "error": 4.816311113358284,
+        "unit": "ns/op"
+      },
+      {
+        "algorithm": "ketama/md5/p160",
+        "members": 128,
+        "score": 228.4401422529138,
+        "error": 4.150917143603109,
+        "unit": "ns/op"
+      },
+      {
+        "algorithm": "rendezvous/murmur3",
+        "members": 128,
+        "score": 203.04510811723708,
+        "error": 1.960756097365438,
+        "unit": "ns/op"
+      },
+      {
+        "algorithm": "jump/murmur3",
+        "members": 128,
+        "score": 41.06821059452968,
+        "error": 0.8759642067906173,
+        "unit": "ns/op"
+      }
+    ],
+    "hashFunction": [
+      {
+        "function": "crc32",
+        "inputBytes": 24,
+        "score": 5.185974881058633,
+        "error": 0.04954311660827358,
+        "unit": "ns/op"
+      },
+      {
+        "function": "crc32",
+        "inputBytes": 512,
+        "score": 12.734582393207491,
+        "error": 0.22336516013645744,
+        "unit": "ns/op"
+      },
+      {
+        "function": "fnv1a64",
+        "inputBytes": 24,
+        "score": 11.006661115532044,
+        "error": 0.3038750188775341,
+        "unit": "ns/op"
+      },
+      {
+        "function": "fnv1a64",
+        "inputBytes": 512,
+        "score": 425.93866377132724,
+        "error": 4.577957993156562,
+        "unit": "ns/op"
+      },
+      {
+        "function": "murmur3_128",
+        "inputBytes": 24,
+        "score": 14.731408128917474,
+        "error": 0.30365018892748524,
+        "unit": "ns/op"
+      },
+      {
+        "function": "murmur3_128",
+        "inputBytes": 512,
+        "score": 175.2884324911718,
+        "error": 3.358666682271803,
+        "unit": "ns/op"
+      },
+      {
+        "function": "md5",
+        "inputBytes": 24,
+        "score": 118.41056165364202,
+        "error": 2.7175378693352648,
+        "unit": "ns/op"
+      },
+      {
+        "function": "md5",
+        "inputBytes": 512,
+        "score": 640.8593846764452,
+        "error": 7.18381961681474,
+        "unit": "ns/op"
+      }
+    ],
+    "membershipChange": [
+      {
+        "algorithm": "ring/crc32/v100",
+        "members": 8,
+        "score": 7.833166318998741,
+        "error": 0.19456164687227864,
+        "unit": "us/op"
+      },
+      {
+        "algorithm": "ring/murmur3/v100",
+        "members": 8,
+        "score": 7.3843011295069285,
+        "error": 0.12389434216666566,
+        "unit": "us/op"
+      },
+      {
+        "algorithm": "ring/murmur3/v500",
+        "members": 8,
+        "score": 49.087926693652335,
+        "error": 3.0027321830079052,
+        "unit": "us/op"
+      },
+      {
+        "algorithm": "ketama/md5/p160",
+        "members": 8,
+        "score": 16.948653140261303,
+        "error": 0.2627920057571034,
+        "unit": "us/op"
+      },
+      {
+        "algorithm": "rendezvous/murmur3",
+        "members": 8,
+        "score": 0.1675511167004808,
+        "error": 0.003266697827236336,
+        "unit": "us/op"
+      },
+      {
+        "algorithm": "jump/murmur3",
+        "members": 8,
+        "score": 0.1439486945984712,
+        "error": 0.014284971565521047,
+        "unit": "us/op"
+      },
+      {
+        "algorithm": "ring/crc32/v100",
+        "members": 128,
+        "score": 10.522698466872257,
+        "error": 0.5819003397533071,
+        "unit": "us/op"
+      },
+      {
+        "algorithm": "ring/murmur3/v100",
+        "members": 128,
+        "score": 10.499300891775684,
+        "error": 0.4419569329480727,
+        "unit": "us/op"
+      },
+      {
+        "algorithm": "ring/murmur3/v500",
+        "members": 128,
+        "score": 82.67751399872427,
+        "error": 2.9252007297470386,
+        "unit": "us/op"
+      },
+      {
+        "algorithm": "ketama/md5/p160",
+        "members": 128,
+        "score": 22.643812517120615,
+        "error": 0.9304002676827677,
+        "unit": "us/op"
+      },
+      {
+        "algorithm": "rendezvous/murmur3",
+        "members": 128,
+        "score": 1.3334780675441853,
+        "error": 0.039844929818304044,
+        "unit": "us/op"
+      },
+      {
+        "algorithm": "jump/murmur3",
+        "members": 128,
+        "score": 1.1657684045654473,
+        "error": 0.208870772281382,
+        "unit": "us/op"
+      }
+    ],
+    "readPath": [
+      {
+        "operation": "buildCandidateOrder",
+        "replicas": 2,
+        "score": 50.75588420145357,
+        "error": 5.601529495815331,
+        "unit": "ns/op"
+      },
+      {
+        "operation": "buildCandidateOrder",
+        "replicas": 16,
+        "score": 252.82351078441033,
+        "error": 73.79584655916085,
+        "unit": "ns/op"
+      },
+      {
+        "operation": "planSeekRange",
+        "replicas": 2,
+        "score": 0.218514426347644,
+        "error": 0.0012201203083598315,
+        "unit": "ns/op"
+      },
+      {
+        "operation": "planSeekRange",
+        "replicas": 16,
+        "score": 0.21902776358905682,
+        "error": 0.004092091309916704,
+        "unit": "ns/op"
+      },
+      {
+        "operation": "selectReadReplicas",
+        "replicas": 2,
+        "score": 12.954494942376652,
+        "error": 0.25719665248035395,
+        "unit": "ns/op"
+      },
+      {
+        "operation": "selectReadReplicas",
+        "replicas": 16,
+        "score": 87.59153057189914,
+        "error": 2.20564844776489,
+        "unit": "ns/op"
+      }
+    ],
+    "chunking": [
+      {
+        "chunkSizeBytes": 65536,
+        "mibPerSecond": 6939.763160148478,
+        "mibPerSecondError": 400.6335192115235
+      },
+      {
+        "chunkSizeBytes": 1048576,
+        "mibPerSecond": 15665.54455799628,
+        "mibPerSecondError": 1740.045133376794
+      },
+      {
+        "chunkSizeBytes": 4194304,
+        "mibPerSecond": 14767.406233010941,
+        "mibPerSecondError": 2274.5811567120286
+      }
+    ]
+  },
+  "endToEnd": {
+    "objectMiB": 64,
+    "measureSeconds": 10,
+    "rows": [
+      {
+        "workload": "startup-1MiB",
+        "target": "heimdall",
+        "concurrency": 1,
+        "mibPerSecond": 94.79,
+        "opsPerSecond": 95.0,
+        "ttfbP50Ms": 8.82,
+        "ttfbP99Ms": 15.32,
+        "totalP50Ms": 10.17,
+        "totalP99Ms": 17.9,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "startup-1MiB",
+        "target": "minio-direct",
+        "concurrency": 1,
+        "mibPerSecond": 483.6,
+        "opsPerSecond": 484.0,
+        "ttfbP50Ms": 1.0,
+        "ttfbP99Ms": 2.56,
+        "totalP50Ms": 1.94,
+        "totalP99Ms": 3.83,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "startup-1MiB",
+        "target": "nginx",
+        "concurrency": 1,
+        "mibPerSecond": 910.34,
+        "opsPerSecond": 910.0,
+        "ttfbP50Ms": 0.18,
+        "ttfbP99Ms": 0.39,
+        "totalP50Ms": 1.05,
+        "totalP99Ms": 1.72,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "startup-1MiB",
+        "target": "seaweedfs",
+        "concurrency": 1,
+        "mibPerSecond": 521.12,
+        "opsPerSecond": 521.0,
+        "ttfbP50Ms": 0.92,
+        "ttfbP99Ms": 1.99,
+        "totalP50Ms": 1.82,
+        "totalP99Ms": 3.55,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "startup-1MiB",
+        "target": "heimdall",
+        "concurrency": 8,
+        "mibPerSecond": 271.44,
+        "opsPerSecond": 271.0,
+        "ttfbP50Ms": 21.39,
+        "ttfbP99Ms": 46.44,
+        "totalP50Ms": 27.88,
+        "totalP99Ms": 56.82,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "startup-1MiB",
+        "target": "minio-direct",
+        "concurrency": 8,
+        "mibPerSecond": 1412.03,
+        "opsPerSecond": 1412.0,
+        "ttfbP50Ms": 2.38,
+        "ttfbP99Ms": 7.49,
+        "totalP50Ms": 5.3,
+        "totalP99Ms": 13.98,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "startup-1MiB",
+        "target": "nginx",
+        "concurrency": 8,
+        "mibPerSecond": 2333.16,
+        "opsPerSecond": 2333.0,
+        "ttfbP50Ms": 0.48,
+        "ttfbP99Ms": 1.15,
+        "totalP50Ms": 3.29,
+        "totalP99Ms": 5.35,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "startup-1MiB",
+        "target": "seaweedfs",
+        "concurrency": 8,
+        "mibPerSecond": 1373.97,
+        "opsPerSecond": 1374.0,
+        "ttfbP50Ms": 3.14,
+        "ttfbP99Ms": 4.87,
+        "totalP50Ms": 5.69,
+        "totalP99Ms": 9.57,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "startup-1MiB",
+        "target": "heimdall",
+        "concurrency": 32,
+        "mibPerSecond": 330.45,
+        "opsPerSecond": 330.0,
+        "ttfbP50Ms": 76.98,
+        "ttfbP99Ms": 168.09,
+        "totalP50Ms": 91.61,
+        "totalP99Ms": 190.45,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "startup-1MiB",
+        "target": "minio-direct",
+        "concurrency": 32,
+        "mibPerSecond": 1285.5,
+        "opsPerSecond": 1286.0,
+        "ttfbP50Ms": 3.54,
+        "ttfbP99Ms": 13.48,
+        "totalP50Ms": 23.38,
+        "totalP99Ms": 39.47,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "startup-1MiB",
+        "target": "nginx",
+        "concurrency": 32,
+        "mibPerSecond": 2227.35,
+        "opsPerSecond": 2227.0,
+        "ttfbP50Ms": 1.21,
+        "ttfbP99Ms": 2.49,
+        "totalP50Ms": 13.8,
+        "totalP99Ms": 21.64,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "startup-1MiB",
+        "target": "seaweedfs",
+        "concurrency": 32,
+        "mibPerSecond": 1397.97,
+        "opsPerSecond": 1398.0,
+        "ttfbP50Ms": 3.57,
+        "ttfbP99Ms": 7.67,
+        "totalP50Ms": 22.63,
+        "totalP99Ms": 27.92,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "seek-4MiB",
+        "target": "heimdall",
+        "concurrency": 1,
+        "mibPerSecond": 302.03,
+        "opsPerSecond": 76.0,
+        "ttfbP50Ms": 7.49,
+        "ttfbP99Ms": 15.93,
+        "totalP50Ms": 12.67,
+        "totalP99Ms": 21.92,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "seek-4MiB",
+        "target": "minio-direct",
+        "concurrency": 1,
+        "mibPerSecond": 775.02,
+        "opsPerSecond": 194.0,
+        "ttfbP50Ms": 1.12,
+        "ttfbP99Ms": 2.4,
+        "totalP50Ms": 4.94,
+        "totalP99Ms": 9.96,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "seek-4MiB",
+        "target": "nginx",
+        "concurrency": 1,
+        "mibPerSecond": 1029.09,
+        "opsPerSecond": 257.0,
+        "ttfbP50Ms": 0.32,
+        "ttfbP99Ms": 0.58,
+        "totalP50Ms": 3.72,
+        "totalP99Ms": 6.31,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "seek-4MiB",
+        "target": "seaweedfs",
+        "concurrency": 1,
+        "mibPerSecond": 747.43,
+        "opsPerSecond": 187.0,
+        "ttfbP50Ms": 1.3,
+        "ttfbP99Ms": 2.44,
+        "totalP50Ms": 5.32,
+        "totalP99Ms": 7.02,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "seek-4MiB",
+        "target": "heimdall",
+        "concurrency": 8,
+        "mibPerSecond": 574.43,
+        "opsPerSecond": 144.0,
+        "ttfbP50Ms": 29.45,
+        "ttfbP99Ms": 64.36,
+        "totalP50Ms": 54.17,
+        "totalP99Ms": 98.31,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "seek-4MiB",
+        "target": "minio-direct",
+        "concurrency": 8,
+        "mibPerSecond": 1802.22,
+        "opsPerSecond": 451.0,
+        "ttfbP50Ms": 1.79,
+        "ttfbP99Ms": 6.94,
+        "totalP50Ms": 16.95,
+        "totalP99Ms": 29.12,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "seek-4MiB",
+        "target": "nginx",
+        "concurrency": 8,
+        "mibPerSecond": 2387.86,
+        "opsPerSecond": 597.0,
+        "ttfbP50Ms": 0.57,
+        "ttfbP99Ms": 1.68,
+        "totalP50Ms": 13.03,
+        "totalP99Ms": 20.03,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "seek-4MiB",
+        "target": "seaweedfs",
+        "concurrency": 8,
+        "mibPerSecond": 1470.65,
+        "opsPerSecond": 368.0,
+        "ttfbP50Ms": 3.9,
+        "ttfbP99Ms": 12.02,
+        "totalP50Ms": 21.53,
+        "totalP99Ms": 30.88,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "seek-4MiB",
+        "target": "heimdall",
+        "concurrency": 32,
+        "mibPerSecond": 619.15,
+        "opsPerSecond": 155.0,
+        "ttfbP50Ms": 166.89,
+        "ttfbP99Ms": 215.49,
+        "totalP50Ms": 204.24,
+        "totalP99Ms": 271.31,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "seek-4MiB",
+        "target": "minio-direct",
+        "concurrency": 32,
+        "mibPerSecond": 1512.73,
+        "opsPerSecond": 378.0,
+        "ttfbP50Ms": 4.17,
+        "ttfbP99Ms": 15.45,
+        "totalP50Ms": 83.87,
+        "totalP99Ms": 109.82,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "seek-4MiB",
+        "target": "nginx",
+        "concurrency": 32,
+        "mibPerSecond": 2106.0,
+        "opsPerSecond": 527.0,
+        "ttfbP50Ms": 1.35,
+        "ttfbP99Ms": 3.38,
+        "totalP50Ms": 60.83,
+        "totalP99Ms": 77.37,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "seek-4MiB",
+        "target": "seaweedfs",
+        "concurrency": 32,
+        "mibPerSecond": 1172.9,
+        "opsPerSecond": 293.0,
+        "ttfbP50Ms": 5.46,
+        "ttfbP99Ms": 21.69,
+        "totalP50Ms": 109.29,
+        "totalP99Ms": 147.39,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "full-download",
+        "target": "heimdall",
+        "concurrency": 1,
+        "mibPerSecond": 515.45,
+        "opsPerSecond": 8.0,
+        "ttfbP50Ms": 12.22,
+        "ttfbP99Ms": 23.65,
+        "totalP50Ms": 123.2,
+        "totalP99Ms": 150.01,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "full-download",
+        "target": "minio-direct",
+        "concurrency": 1,
+        "mibPerSecond": 979.14,
+        "opsPerSecond": 15.0,
+        "ttfbP50Ms": 1.3,
+        "ttfbP99Ms": 1.9,
+        "totalP50Ms": 64.81,
+        "totalP99Ms": 77.86,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "full-download",
+        "target": "nginx",
+        "concurrency": 1,
+        "mibPerSecond": 1075.2,
+        "opsPerSecond": 17.0,
+        "ttfbP50Ms": 0.43,
+        "ttfbP99Ms": 0.72,
+        "totalP50Ms": 59.05,
+        "totalP99Ms": 73.12,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "full-download",
+        "target": "seaweedfs",
+        "concurrency": 1,
+        "mibPerSecond": 875.38,
+        "opsPerSecond": 14.0,
+        "ttfbP50Ms": 2.33,
+        "ttfbP99Ms": 3.26,
+        "totalP50Ms": 72.39,
+        "totalP99Ms": 101.25,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "full-download",
+        "target": "heimdall",
+        "concurrency": 8,
+        "mibPerSecond": 731.82,
+        "opsPerSecond": 11.0,
+        "ttfbP50Ms": 406.48,
+        "ttfbP99Ms": 524.01,
+        "totalP50Ms": 680.07,
+        "totalP99Ms": 885.76,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "full-download",
+        "target": "minio-direct",
+        "concurrency": 8,
+        "mibPerSecond": 1581.84,
+        "opsPerSecond": 25.0,
+        "ttfbP50Ms": 2.63,
+        "ttfbP99Ms": 8.73,
+        "totalP50Ms": 321.9,
+        "totalP99Ms": 375.74,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "full-download",
+        "target": "nginx",
+        "concurrency": 8,
+        "mibPerSecond": 2596.69,
+        "opsPerSecond": 41.0,
+        "ttfbP50Ms": 0.6,
+        "ttfbP99Ms": 1.74,
+        "totalP50Ms": 193.75,
+        "totalP99Ms": 233.88,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "full-download",
+        "target": "seaweedfs",
+        "concurrency": 8,
+        "mibPerSecond": 1327.96,
+        "opsPerSecond": 21.0,
+        "ttfbP50Ms": 8.02,
+        "ttfbP99Ms": 18.6,
+        "totalP50Ms": 386.64,
+        "totalP99Ms": 440.78,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "full-download",
+        "target": "heimdall",
+        "concurrency": 32,
+        "mibPerSecond": 752.54,
+        "opsPerSecond": 12.0,
+        "ttfbP50Ms": 2375.71,
+        "ttfbP99Ms": 2615.84,
+        "totalP50Ms": 2685.28,
+        "totalP99Ms": 2911.68,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "full-download",
+        "target": "minio-direct",
+        "concurrency": 32,
+        "mibPerSecond": 1699.49,
+        "opsPerSecond": 27.0,
+        "ttfbP50Ms": 6.51,
+        "ttfbP99Ms": 42.52,
+        "totalP50Ms": 1189.07,
+        "totalP99Ms": 1437.85,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "full-download",
+        "target": "nginx",
+        "concurrency": 32,
+        "mibPerSecond": 2562.56,
+        "opsPerSecond": 40.0,
+        "ttfbP50Ms": 1.36,
+        "ttfbP99Ms": 4.91,
+        "totalP50Ms": 793.68,
+        "totalP99Ms": 842.41,
+        "errors": 0,
+        "integrityFailures": 0
+      },
+      {
+        "workload": "full-download",
+        "target": "seaweedfs",
+        "concurrency": 32,
+        "mibPerSecond": 1209.59,
+        "opsPerSecond": 19.0,
+        "ttfbP50Ms": 8.7,
+        "ttfbP99Ms": 92.44,
+        "totalP50Ms": 1624.64,
+        "totalP99Ms": 2346.46,
+        "errors": 0,
+        "integrityFailures": 0
+      }
+    ]
+  },
+  "tests": {
+    "unitAndProperty": 96,
+    "integration": 5,
+    "before": 21,
+    "bugsFound": [
+      {
+        "summary": "Unsatisfiable Range returned 206 with a negative Content-Length",
+        "detail": "Spring's HttpRange clamps a range's end past end-of-file but not its start, so bytes=999999999- produced start > end. Caught by the integration suite against real processes; now a 416."
+      }
+    ]
+  }
+}

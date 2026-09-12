@@ -17,9 +17,7 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 
-import static com.example.heimdall.gateway.service.MetricsService.CHUNK_FETCH_LATENCY;
 import static com.example.heimdall.gateway.service.MetricsService.FAILOVERS;
 import static com.example.heimdall.gateway.service.MetricsService.READS;
 import static com.example.heimdall.gateway.service.MetricsService.TAG_PRIMARY;
@@ -55,10 +53,12 @@ public class StreamingOrchestratorService {
     }
 
     public PreparedStream prepare(String objectId, Integer readPercent) {
+        long startNanos = System.nanoTime();
         PrimaryNode primary = loadBalancerService.resolvePrimary(objectId);
         List<ReplicaNode> selected = loadBalancerService.selectReadReplicas(primary, readPercent);
         List<String> candidates = buildCandidateOrder(primary, selected);
         ObjectMetadataDto meta = fetchMetaWithFailover(candidates, objectId);
+        ReadPathMeters.readPrepared(meterRegistry, System.nanoTime() - startNanos);
         meterRegistry.counter(READS, TAG_PRIMARY, primary.id()).increment();
         return new PreparedStream(objectId, meta, candidates, selected.size());
     }
@@ -143,12 +143,16 @@ public class StreamingOrchestratorService {
             long startNanos = System.nanoTime();
             try {
                 byte[] chunk = nodeClient.fetchChunk(baseUrl, objectId, chunkIndex);
-                meterRegistry.timer(CHUNK_FETCH_LATENCY).record(System.nanoTime() - startNanos, TimeUnit.NANOSECONDS);
+                ReadPathMeters.chunkServed(meterRegistry, baseUrl, chunk.length, System.nanoTime() - startNanos);
                 if (a > 0) {
                     meterRegistry.counter(FAILOVERS).increment();
                 }
                 return chunk;
-            } catch (NoSuchElementException | NodeUnavailableException e) {
+            } catch (NoSuchElementException e) {
+                ReadPathMeters.chunkFailed(meterRegistry, baseUrl, "missing");
+                last = e;
+            } catch (NodeUnavailableException e) {
+                ReadPathMeters.chunkFailed(meterRegistry, baseUrl, "unavailable");
                 last = e;
             }
         }

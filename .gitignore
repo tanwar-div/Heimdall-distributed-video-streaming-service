@@ -10,3 +10,13 @@ bench-results/
 .jqwik-database
 claudesession.txt
 dependency-reduced-pom.xml
+
+# Demo media: stays local, never committed.
+sample_video.mp4
+
+# The demo lives in docs/media, which is what the site publishes; this is the
+# working copy, kept out of git so the 5.6 MB file is stored only once.
+/product-demo-gif.gif
+
+# Local editor/preview config, not part of the project.
+.claude/
